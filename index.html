@@ -16,6 +16,37 @@
   ::selection{background:#C9A05044}
 
   /* ---------- shell ---------- */
+  .shell{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}
+  .side{
+    background:var(--bg2);border-right:1px solid var(--hair);
+    padding:22px 14px;position:sticky;top:0;height:100vh;
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .side .brand{margin:0 10px 22px}
+  .snav{
+    display:flex;align-items:center;gap:12px;
+    background:none;border:none;cursor:pointer;text-align:left;
+    color:var(--dim);font-size:14px;font-weight:600;letter-spacing:.03em;
+    padding:11px 12px;border-radius:5px;border-left:2px solid transparent;
+    transition:all .2s;width:100%;
+  }
+  .snav .ic{font-family:var(--mono);font-size:10px;color:var(--gold);width:26px;
+    height:26px;border:1px solid var(--hair2);border-radius:4px;
+    display:flex;align-items:center;justify-content:center;flex:none}
+  .snav:hover{color:var(--ink);background:var(--card)}
+  .snav.on{color:var(--gold-hi);background:var(--card);border-left-color:var(--gold)}
+  .snav.ghost{cursor:default;opacity:.45}
+  .snav.ghost:hover{color:var(--dim);background:none}
+  .snav .soon{margin-left:auto;font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;
+    color:var(--dim);border:1px solid var(--hair2);padding:2px 6px;border-radius:99px}
+  .side .spacer{flex:1}
+  .userchip{
+    display:flex;align-items:center;gap:10px;padding:12px;border-top:1px solid var(--hair);
+  }
+  .userchip .av{width:32px;height:32px;border-radius:50%;background:linear-gradient(120deg,var(--gold),var(--gold-hi));
+    color:#0A1220;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .userchip .nm{font-size:13px;font-weight:600}
+  .userchip .nm small{display:block;font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
   .topbar{
     position:sticky;top:0;z-index:20;
     display:flex;align-items:center;gap:20px;
@@ -49,7 +80,7 @@
   .search .k{font-family:var(--mono);font-size:11px;color:var(--dim)}
 
   .tabs{
-    display:flex;gap:4px;padding:0 24px;
+    display:none;gap:4px;padding:0 24px;
     border-bottom:1px solid var(--hair);
     background:var(--bg2);
     overflow-x:auto;
@@ -218,6 +249,9 @@
   }
 
   @media(max-width:880px){
+    .shell{grid-template-columns:1fr}
+    .side{display:none}
+    .tabs{display:flex}
     .tiles{grid-template-columns:1fr 1fr}
     .intake-grid{grid-template-columns:1fr}
     .search{display:none}
@@ -228,10 +262,21 @@
   }
 </style>
 
+<div class="shell">
+<aside class="side">
+  <div class="brand">4PL<small>Command Center</small></div>
+  <button class="snav on" data-v="dash"><span class="ic">01</span>Today</button>
+  <button class="snav" data-v="carriers"><span class="ic">02</span>Carriers</button>
+  <button class="snav" data-v="renewals"><span class="ic">03</span>Renewals</button>
+  <button class="snav" data-v="intake"><span class="ic">04</span>New Carrier</button>
+  <button class="snav ghost"><span class="ic">05</span>Documents<span class="soon">Soon</span></button>
+  <button class="snav ghost"><span class="ic">06</span>Reports<span class="soon">Soon</span></button>
+  <button class="snav ghost"><span class="ic">07</span>Billing<span class="soon">Soon</span></button>
+  <div class="spacer"></div>
+  <div class="userchip"><div class="av">A</div><div class="nm">Angela<small>Owner · 4PL</small></div></div>
+</aside>
+<div class="main">
 <div class="topbar">
-  <div>
-    <div class="brand">4PL<small>Command Center</small></div>
-  </div>
   <span class="demo-pill">Demo · Sample Data</span>
   <div class="search">
     <span style="color:var(--dim)">⌕</span>
@@ -343,6 +388,8 @@
 
   <p class="footnote">4PL Command Center · Demonstration with sample data · Nothing here is real</p>
 </div>
+</div><!-- /main -->
+</div><!-- /shell -->
 
 <!-- ============ DRAWER ============ -->
 <div class="overlay" id="overlay">
@@ -548,10 +595,10 @@
 
   /* ---------- tabs ---------- */
   function switchView(v){
-    document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',t.dataset.v===v)});
+    document.querySelectorAll('.tab,.snav[data-v]').forEach(function(t){t.classList.toggle('on',t.dataset.v===v)});
     document.querySelectorAll('.view').forEach(function(x){x.classList.toggle('on',x.id==='v-'+v)});
   }
-  document.querySelectorAll('.tab').forEach(function(t){
+  document.querySelectorAll('.tab,.snav[data-v]').forEach(function(t){
     t.addEventListener('click',function(){switchView(t.dataset.v)});
   });
   document.querySelectorAll('.tile[data-go]').forEach(function(t){
