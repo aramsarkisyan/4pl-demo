@@ -321,7 +321,8 @@
     display:flex;align-items:center;justify-content:center;padding:0 5px;
   }
   @media(max-width:880px){
-    .msgs{grid-template-columns:1fr;height:70vh}
+    .msgs{grid-template-columns:minmax(0,1fr);height:70vh}
+    .threads,.convo{min-width:0}
     .threads{display:block}
     .msgs.talking .threads{display:none}
     .convo{display:none}
