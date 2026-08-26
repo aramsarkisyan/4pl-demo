@@ -99,6 +99,14 @@
   .view{display:none}
   .view.on{display:block;animation:fade .35s ease}
   @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  /* swipe navigation: the new tab slides in from the direction you swiped */
+  .view.on.sw-next{animation:slideFromRight .26s ease}
+  .view.on.sw-prev{animation:slideFromLeft .26s ease}
+  @keyframes slideFromRight{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+  @keyframes slideFromLeft{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){
+    .view.on,.view.on.sw-next,.view.on.sw-prev{animation:none}
+  }
 
   /* ---------- dashboard ---------- */
   .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
@@ -840,11 +848,18 @@
   document.getElementById('reply').addEventListener('keydown',function(e){if(e.key==='Enter')sendReply()});
 
   /* ---------- tabs ---------- */
-  function switchView(v){
+  function switchView(v,dir){
     document.querySelectorAll('.tab,.snav[data-v]').forEach(function(t){t.classList.toggle('on',t.dataset.v===v)});
-    document.querySelectorAll('.view').forEach(function(x){x.classList.toggle('on',x.id==='v-'+v)});
+    document.querySelectorAll('.view').forEach(function(x){
+      x.classList.remove('sw-next','sw-prev');
+      var on = x.id==='v-'+v;
+      x.classList.toggle('on',on);
+      if(on && dir) x.classList.add(dir==='next'?'sw-next':'sw-prev');
+    });
     if(v!=='msgs') closeThread();
     window.scrollTo(0,0);
+    var activeTab=document.querySelector('.tab.on');
+    if(activeTab && activeTab.scrollIntoView) activeTab.scrollIntoView({block:'nearest',inline:'center'});
   }
   document.querySelectorAll('.tab,.snav[data-v]').forEach(function(t){
     t.addEventListener('click',function(){switchView(t.dataset.v)});
@@ -852,5 +867,51 @@
   document.querySelectorAll('.tile[data-go]').forEach(function(t){
     t.addEventListener('click',function(){switchView(t.dataset.go)});
   });
+
+  /* ---------- swipe left/right to change tabs ---------- */
+  (function(){
+    var ORDER=['dash','carriers','renewals','intake','msgs'];
+    var x0=0,y0=0,t0=0,tracking=false;
+    /* don't hijack a swipe that belongs to something scrolling sideways */
+    function inSideScroller(el){
+      while(el && el!==document.body){
+        if(el.classList && el.classList.contains('tabs')) return true;
+        if(el.scrollWidth > el.clientWidth+4){
+          var ov=getComputedStyle(el).overflowX;
+          if(ov==='auto'||ov==='scroll') return true;
+        }
+        el=el.parentElement;
+      }
+      return false;
+    }
+    function currentView(){
+      var on=document.querySelector('.view.on');
+      return on?on.id.replace('v-',''):null;
+    }
+    document.addEventListener('touchstart',function(e){
+      tracking=false;
+      if(e.touches.length!==1) return;
+      var ov=document.getElementById('overlay');
+      if(ov && ov.classList.contains('on')) return;      /* carrier file is open */
+      if(inSideScroller(e.target)) return;
+      var t=e.touches[0]; x0=t.clientX; y0=t.clientY; t0=Date.now(); tracking=true;
+    },{passive:true});
+    document.addEventListener('touchend',function(e){
+      if(!tracking) return; tracking=false;
+      var t=e.changedTouches[0], dx=t.clientX-x0, dy=t.clientY-y0;
+      if(Date.now()-t0>700) return;                       /* a slow drag isn't a swipe */
+      if(Math.abs(dx)<55 || Math.abs(dx) < Math.abs(dy)*1.5) return;
+      /* inside an open thread, swiping right goes back to the list */
+      if(document.body.classList.contains('msg-open')){
+        if(dx>0) closeThread();
+        return;
+      }
+      var i=ORDER.indexOf(currentView());
+      if(i<0) return;
+      var j=i+(dx<0?1:-1);
+      if(j<0||j>=ORDER.length) return;
+      switchView(ORDER[j], dx<0?'next':'prev');
+    },{passive:true});
+  })();
 })();
 </script>
