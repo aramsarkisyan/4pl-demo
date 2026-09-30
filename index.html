@@ -384,6 +384,7 @@
   .agency-chip{
     text-align:left;background:var(--bg);border:1px solid var(--hair2);border-radius:6px;
     padding:12px 15px;cursor:pointer;transition:all .2s;min-width:184px;flex:1;
+    color:var(--ink);font-family:var(--sans);
   }
   .agency-chip:hover{border-color:var(--gold);transform:translateY(-1px)}
   .agency-chip .ac-n{font-weight:600;font-size:13.5px}
@@ -407,19 +408,52 @@
   .call-card.hold .cc-status{color:var(--warn)}
   .call-card.human .cc-status{color:var(--gold-hi)}
   .call-card .cc-timer{font-family:var(--mono);font-size:12px;color:var(--warn);font-variant-numeric:tabular-nums;flex:none}
+  /* the page sets display on some hidden-able elements, so make [hidden] win */
+  [hidden]{display:none!important}
+  .call-card .cc-right{flex:none;display:flex;align-items:center}
+  .call-card .cc-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
   .call-card .cc-join{
     background:linear-gradient(120deg,var(--gold),var(--gold-hi));color:#0A1220;
-    border:none;border-radius:99px;padding:10px 18px;font-weight:700;font-size:13px;cursor:pointer;flex:none;
-    animation:pulse 1.2s infinite;
+    border:none;border-radius:99px;padding:10px 18px;font-weight:700;font-size:13px;cursor:pointer;
+    animation:glow 1.6s infinite;
   }
+  .call-card .cc-ghost{
+    background:none;border:1px solid var(--hair2);color:var(--gold-hi);
+    border-radius:99px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;
+  }
+  .call-card .cc-ghost:hover{border-color:var(--gold)}
+  .call-card .cc-hang{
+    background:none;border:1px solid #D96C5C88;color:var(--bad);
+    border-radius:99px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;
+  }
+  .call-card .cc-hang:hover{background:#D96C5C14}
+  @keyframes glow{0%,100%{box-shadow:0 0 0 0 #E8C87E88}50%{box-shadow:0 0 0 7px #E8C87E00}}
+  .call-card.ringing .cc-dot{background:var(--gold-hi);animation:pulse .6s infinite}
+  .call-card.ringing .cc-status{color:var(--gold-hi)}
+  .call-card.ringing{border-left:2px solid var(--gold)}
+  .call-card.connected{background:linear-gradient(90deg,#5CB17614,transparent);border-left:2px solid var(--ok)}
+  .call-card.connected .cc-dot{background:var(--ok)}
+  .call-card.connected .cc-status{color:var(--ok)}
+  .cc-empty{padding:22px 20px;color:var(--dim);font-size:13.5px}
   .call-alert{
     background:linear-gradient(120deg,var(--gold),var(--gold-hi));color:#0A1220;
     border-radius:6px;padding:14px 18px;margin-bottom:18px;font-weight:600;font-size:14px;
-    display:flex;align-items:center;gap:10px;flex-wrap:wrap;animation:fade .35s ease;
+    display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;animation:fade .35s ease;
   }
+  .call-alert .ca-btns{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
   .call-alert .ca-join{
-    margin-left:auto;background:#0A1220;color:var(--gold-hi);border:none;
+    background:#0A1220;color:var(--gold-hi);border:none;
     border-radius:99px;padding:9px 18px;font-weight:700;cursor:pointer;font-size:13px;
+  }
+  .call-alert .ca-cell{
+    background:none;border:1px solid #0A122066;color:#0A1220;
+    border-radius:99px;padding:8px 14px;font-weight:600;cursor:pointer;font-size:12.5px;
+  }
+  @media(max-width:600px){
+    .call-card{flex-wrap:wrap}
+    .call-card .cc-right{width:100%;padding-left:24px}
+    .call-card .cc-btns{justify-content:flex-start}
+    .call-alert .ca-btns{margin-left:0}
   }
 
   /* ---------- ask sark ---------- */
@@ -1087,12 +1121,12 @@
 /* ================= CALL ASSIST (hold-bot) ================= */
 (function(){
   var AGENCIES=[
-    {name:"FMCSA",                  sub:"DOT/MC authority · MCS-150", ph:"(800) 832-5660"},
-    {name:"CA DMV — Motor Carrier", sub:"CA MCP permit",              ph:"(916) 657-8153"},
-    {name:"CARB — Clean Truck Check",sub:"CTC compliance",            ph:"(866) 634-3735"},
-    {name:"IRP / Apportioned Reg.", sub:"Cab cards & registration",   ph:"(916) 657-7971"},
-    {name:"Progressive Commercial", sub:"Insurance / COI",            ph:"(800) 444-4487"},
-    {name:"UCR Registration",       sub:"Annual UCR filing",          ph:"(833) 827-7626"}
+    {name:"FMCSA",                   sub:"DOT/MC authority · MCS-150", ph:"(800) 832-5660"},
+    {name:"CA DMV — Motor Carrier",  sub:"CA MCP permit",              ph:"(916) 657-8153"},
+    {name:"CARB — Clean Truck Check",sub:"CTC compliance",             ph:"(866) 634-3735"},
+    {name:"IRP / Apportioned Reg.",  sub:"Cab cards & registration",   ph:"(916) 657-7971"},
+    {name:"Progressive Commercial",  sub:"Insurance / COI",            ph:"(800) 444-4487"},
+    {name:"UCR Registration",        sub:"Annual UCR filing",          ph:"(833) 827-7626"}
   ];
   var board=document.getElementById('call-board'),
       chipsWrap=document.getElementById('agency-chips'),
@@ -1101,77 +1135,124 @@
       logWrap=document.getElementById('call-log');
   if(!board) return;
   var calls=[], uid=0;
+  var empty=document.createElement('div');
+  empty.className='cc-empty';
+  empty.textContent='No active calls. Tap an agency above and Sark starts dialing — go do something else, your desk phone rings when a person picks up.';
+  board.appendChild(empty);
 
-  function addCall(ag,opts){
-    opts=opts||{};
-    calls.push({id:++uid,ag:ag,state:opts.state||'dialing',hold:opts.hold||0,
-                _target:opts.target||(4+Math.floor(Math.random()*13)),_t:0});
-    renderBoard();
-  }
+  function rnd(a,b){ return a+Math.floor(Math.random()*(b-a+1)); }
+  function mmss(s){ var m=Math.floor(s/60),r=s%60; return m+':'+(r<10?'0':'')+r; }
+  function active(){ return calls.filter(function(c){return c.state!=='done'}); }
+  /* only one agent at a time — the rest keep holding until Angela is free */
+  function busy(){ return calls.some(function(c){return c.state==='human'||c.state==='ringing'||c.state==='connected'}); }
+
   function stateText(c){
-    if(c.state==='dialing')return 'Dialing '+c.ag.ph+'…';
-    if(c.state==='menu')   return 'In the phone menu — pressed 2, then 1…';
-    if(c.state==='hold')   return 'On hold · '+c.hold+' min';
-    if(c.state==='human')  return 'A real person just picked up';
+    switch(c.state){
+      case 'dialing':   return 'Dialing '+c.ag.ph+'…';
+      case 'menu':      return 'In the phone menu — pressed 2, then 1…';
+      case 'hold':      return 'On hold · '+c.hold+' min — Sark is waiting so you don’t have to';
+      case 'human':     return 'A real person picked up — Sark told them “connecting you to Angela now”';
+      case 'ringing':   return 'Ringing '+c.where+'… pick up and you’re on';
+      case 'connected': return 'You’re on with '+c.ag.name+' · '+mmss(c.talk)+' · Sark held '+c.hold+' min for you';
+    }
     return '';
   }
-  function renderBoard(){
-    var live=0; board.innerHTML='';
-    calls.forEach(function(c){
-      if(c.state!=='done') live++;
-      var right = c.state==='human' ? '<button class="cc-join">Join call ▸</button>'
-                : (c.state==='hold' ? '<span class="cc-timer">'+c.hold+' min</span>' : '');
-      var el=document.createElement('div');
-      el.className='call-card '+c.state;
-      el.innerHTML='<span class="cc-dot"></span>'+
-        '<div class="cc-main"><div class="cc-co">'+c.ag.name+' <small>· '+c.ag.sub+'</small></div>'+
-        '<div class="cc-status">'+stateText(c)+'</div></div>'+right;
-      if(c.state==='human') el.querySelector('.cc-join').addEventListener('click',function(){joinCall(c)});
-      board.appendChild(el);
+  function rightSide(c){
+    if(c.state==='hold')      return '<span class="cc-timer">'+c.hold+' min</span>';
+    if(c.state==='human')     return '<div class="cc-btns"><button class="cc-join" data-a="desk">Ring my desk phone ▸</button><button class="cc-ghost" data-a="cell">Ring my cell</button></div>';
+    if(c.state==='connected') return '<div class="cc-btns"><button class="cc-hang" data-a="hang">Hang up</button></div>';
+    return '';
+  }
+  function wire(root,c){
+    root.querySelectorAll('button[data-a]').forEach(function(b){
+      b.addEventListener('click',function(){ act(c,b.dataset.a); });
     });
-    if(!calls.some(function(c){return c.state!=='done'})){
-      board.innerHTML='<div style="padding:22px 20px;color:var(--dim);font-size:13.5px">No active calls. Tap an agency above and Sark starts dialing — go do something else, it’ll ping you.</div>';
+  }
+  /* each card is built once and updated in place — rebuilding every second would eat clicks */
+  function paint(c){
+    if(!c.el){
+      c.el=document.createElement('div');
+      c.el.innerHTML='<span class="cc-dot"></span><div class="cc-main"><div class="cc-co">'+c.ag.name+
+        ' <small>· '+c.ag.sub+'</small></div><div class="cc-status"></div></div><div class="cc-right"></div>';
+      board.appendChild(c.el);
     }
-    liveCount.textContent = live? (live+' on the line now') : 'idle';
+    c.el.className='call-card '+c.state;
+    c.el.querySelector('.cc-status').textContent=stateText(c);
+    var r=c.el.querySelector('.cc-right');
+    if(c._shown!==c.state){ c._shown=c.state; r.innerHTML=rightSide(c); wire(r,c); }
+    else if(c.state==='hold'){ var t=r.querySelector('.cc-timer'); if(t) t.textContent=c.hold+' min'; }
   }
-  function fireHumanAlert(c){
+  function refreshMeta(){
+    var n=active().length;
+    empty.hidden = n>0;
+    liveCount.textContent = n ? n+' on the line now' : 'idle';
+    var h=calls.filter(function(c){return c.state==='human'})[0];
+    if(!h){ alertBox.hidden=true; alertBox.dataset.id=''; return; }
+    if(alertBox.dataset.id===String(h.id)) return;
+    alertBox.dataset.id=String(h.id);
+    alertBox.innerHTML='<span>✦ <b>'+h.ag.name+'</b> — a real person is on the line. Sark held '+h.hold+
+      ' min and told them you’re coming.</span><span class="ca-btns"><button class="ca-join" data-a="desk">Ring my desk phone ▸</button>'+
+      '<button class="ca-cell" data-a="cell">Ring my cell</button></span>';
+    wire(alertBox,h);
     alertBox.hidden=false;
-    alertBox.innerHTML='✦ <b>'+c.ag.name+'</b> — a real person is on the line. Sark waited '+c.hold+' min on hold for you.'+
-      '<button class="ca-join">Talk now ▸</button>';
-    alertBox.querySelector('.ca-join').addEventListener('click',function(){joinCall(c)});
   }
-  function joinCall(c){
-    c.state='done'; alertBox.hidden=true;
-    var el=document.createElement('div'); el.className='note';
-    el.innerHTML='<b>'+c.ag.name+'</b> — you joined and spoke to a live agent. Sark saved you '+c.hold+' min on hold.<span class="when">TODAY · just now</span>';
-    logWrap.insertBefore(el,logWrap.firstChild);
-    renderBoard();
+  function act(c,a){
+    if((a==='desk'||a==='cell') && c.state==='human'){
+      c.state='ringing'; c.where = a==='desk' ? 'your desk phone' : 'your cell'; c._t=0;
+    } else if(a==='hang' && c.state==='connected'){
+      c.state='done';
+      var note=document.createElement('div'); note.className='note';
+      note.innerHTML='<b>'+c.ag.name+'</b> — you talked to a live agent for '+mmss(c.talk)+'. Sark sat on hold '+
+        c.hold+' min so you didn’t have to.<span class="when">TODAY · just now</span>';
+      logWrap.insertBefore(note,logWrap.firstChild);
+      if(c.el && c.el.parentNode) c.el.parentNode.removeChild(c.el);
+      refreshMeta(); return;
+    } else return;
+    paint(c); refreshMeta();
   }
+  function addCall(ag,opts){
+    opts=opts||{};
+    var c={id:++uid,ag:ag,state:opts.state||'dialing',hold:opts.hold||0,
+           _target:opts.target||rnd(5,16),_t:0,talk:0,where:''};
+    calls.push(c); paint(c); refreshMeta();
+  }
+
   AGENCIES.forEach(function(ag){
     var b=document.createElement('button'); b.className='agency-chip';
     b.innerHTML='<div class="ac-n">'+ag.name+'</div><div class="ac-s">'+ag.sub+'</div>';
-    b.addEventListener('click',function(){ addCall(ag,{state:'dialing'}); });
+    b.addEventListener('click',function(){
+      /* already calling this agency? don't dial it twice */
+      if(active().some(function(c){return c.ag===ag})) return;
+      addCall(ag,{state:'dialing'});
+    });
     chipsWrap.appendChild(b);
   });
   /* seed the call log so the "time saved" panel isn't empty */
   logWrap.innerHTML=
-    '<div class="note"><b>IRP / Apportioned Reg.</b> — reached a live agent in 22 min. You updated 3 cab cards and hung up.<span class="when">TODAY · 8:37 AM</span></div>'+
-    '<div class="note"><b>UCR Registration</b> — Sark left your callback number; agent will call back this afternoon.<span class="when">TODAY · 8:05 AM</span></div>';
-  /* preload a few live calls — one connects within seconds for the demo */
-  addCall(AGENCIES[0],{state:'hold',hold:7,target:9});   /* FMCSA — connects ~2s */
-  addCall(AGENCIES[1],{state:'hold',hold:3,target:15});  /* CA DMV — still holding */
-  addCall(AGENCIES[2],{state:'menu'});                   /* CARB — navigating menu */
+    '<div class="note"><b>IRP / Apportioned Reg.</b> — you talked to a live agent for 6:12. Sark sat on hold 22 min so you didn’t have to.<span class="when">TODAY · 8:37 AM</span></div>'+
+    '<div class="note"><b>UCR Registration</b> — you were on another call, so Sark left your callback number with the agent.<span class="when">TODAY · 8:05 AM</span></div>';
+  /* preload live calls — FMCSA reaches a person within seconds, the others keep holding */
+  addCall(AGENCIES[0],{state:'hold',hold:7,target:9});
+  addCall(AGENCIES[1],{state:'hold',hold:3,target:12});
+  addCall(AGENCIES[2],{state:'menu'});
 
   setInterval(function(){
-    var dirty=false;
     calls.forEach(function(c){
-      if(c.state==='done'||c.state==='human') return;
-      dirty=true;
-      if(c.state==='dialing'){ if(++c._t>=2){c.state='menu';c._t=0;} }
-      else if(c.state==='menu'){ if(++c._t>=2){c.state='hold';c.hold=0;c._target=c._target||(4+Math.floor(Math.random()*13));} }
-      else if(c.state==='hold'){ c.hold++; if(c.hold>=c._target){c.state='human';fireHumanAlert(c);} }
+      if(c.state==='dialing'){ if(++c._t>=2){ c.state='menu'; c._t=0; } }
+      else if(c.state==='menu'){ if(++c._t>=2){ c.state='hold'; c._t=0; } }
+      else if(c.state==='hold'){
+        c.hold++;
+        if(c.hold>=c._target){
+          if(busy()) c._target=c.hold+rnd(3,7);   /* Angela's already on one — keep holding */
+          else c.state='human';
+        }
+      }
+      else if(c.state==='ringing'){ if(++c._t>=3){ c.state='connected'; c.talk=0; } }
+      else if(c.state==='connected'){ c.talk++; }
+      else return;
+      paint(c);
     });
-    if(dirty) renderBoard();
+    refreshMeta();
   },1000);
 })();
 
