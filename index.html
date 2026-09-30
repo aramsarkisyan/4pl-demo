@@ -1267,7 +1267,12 @@
       meter=document.getElementById('sark-meter'),
       closeB=document.getElementById('sark-close');
   if(!fab) return;
-  var used=47;
+  var ENDPOINT='https://rddksfsjzagscszpidoj.supabase.co/functions/v1/fourpl-ask-sark';
+  var BASE=47, extra=0, history=[], waiting=false;
+  try{ extra=parseInt(localStorage.getItem('sark-actions')||'0',10)||0; }catch(e){}
+  function showMeter(){ meter.textContent=(BASE+extra)+' / 1,000 this month'; }
+  showMeter();
+
   var SUGGEST=["Who's overdue right now?","Draft a reminder text to Narek about his Clean Truck Check",
                "What does Sevan Logistics still owe me?","Summarize today"];
   SUGGEST.forEach(function(s){
@@ -1279,46 +1284,58 @@
     var el=document.createElement('div'); el.className='sark-bub '+cls; el.innerHTML=html;
     body.appendChild(el); body.scrollTop=body.scrollHeight; return el;
   }
-  function answer(q){
+  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  /* the model answers in plain text with **bold** — escape first, then format */
+  function format(t){
+    t=t.replace(/^\s*-{3,}\s*$/gm,'').replace(/\n{3,}/g,'\n\n').trim();
+    return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
+  }
+  /* scripted answers — only used if the live assistant can't be reached */
+  function canned(q){
     q=q.toLowerCase();
     if(/overdue|late|behind/.test(q))
-      return "Two items are overdue right now:<br><br>"+
-        "• <b>H&amp;G Transport LLC</b> — IRP Registration, <b>6 days late</b><br>"+
-        "• <b>Vardavar Logistics</b> — CARB Clean Truck Check, <b>13 days late</b> (the truck can’t legally run until it clears)<br><br>"+
-        "Want me to text both of them a reminder now?";
+      return "Two items are overdue right now:<br><br>• <b>H&amp;G Transport LLC</b> — IRP Registration, <b>6 days late</b><br>"+
+        "• <b>Vardavar Logistics</b> — CARB Clean Truck Check, <b>13 days late</b> (the truck can’t legally run until it clears)";
     if(/narek|clean truck|vardavar|\bctc\b/.test(q))
-      return "Here’s a draft text to <b>Narek Osipyan (Vardavar Logistics)</b>:<br><br>"+
-        "<i>“Hi Narek — your CARB Clean Truck Check is now 13 days overdue and the truck can’t legally run until it clears. "+
-        "You said you’d test this morning — can you send me the certificate today so I can file it and get you back on the road? — Angela”</i><br><br>"+
-        "Want me to send it to (818) 555-0171? You approve before anything goes out.";
-    if(/sevan|karine|owe|still need|missing/.test(q))
-      return "<b>Sevan Logistics LLC (Karine Avagyan)</b> — CA intrastate, 1 truck. Still outstanding:<br><br>"+
-        "• <b>CA MCP renewal</b> — due in 9 days<br>"+
-        "• <b>CARB Clean Truck Check</b> — due in 41 days<br><br>"+
-        "She texted her insurance page this morning (already filed). She’s bringing the rest Thursday.";
-    if(/summar|today|activity|what happened/.test(q))
-      return "<b>Today so far:</b><br><br>"+
-        "• 17 documents in this week, 4 still waiting to be filed<br>"+
-        "• Hakob (H&amp;G) sent his COI + cab card — filed automatically<br>"+
-        "• Reminders went to 6 carriers with October CA MCP renewals — 2 replied<br>"+
-        "• <b>2 overdue</b> and <b>7 due in the next 30 days</b> — want the list?";
-    if(/draft|email|write|remind|text/.test(q))
-      return "I can draft that. Tell me the carrier and what it’s about and I’ll write it in your voice — you always approve before anything sends.";
-    return "I can pull that straight from your carrier records. In the full system I’d look across all 1,204 files and answer instantly — "+
-      "who’s overdue, what a carrier still owes, drafting a reminder, or summarizing a document someone just sent in. What would you like me to check?";
+      return "Draft to <b>Narek Osipyan</b>:<br><br><i>“Hi Narek — your Clean Truck Check is 13 days overdue and the truck can’t run until it clears. "+
+        "Can you send me the certificate today so I can file it? — Angela”</i><br><br>You approve before anything goes out.";
+    if(/sevan|karine|owe/.test(q))
+      return "<b>Sevan Logistics LLC</b> still owes: <b>CA MCP renewal</b> (due in 9 days) and <b>CARB Clean Truck Check</b> (due in 41 days).";
+    return "<b>Today:</b> 17 documents in this week (4 waiting to be filed), Hakob’s COI and cab card filed automatically, "+
+      "reminders out to 6 carriers with October renewals, and <b>2 items overdue</b>.";
   }
+  function setBusy(b){ waiting=b; inp.disabled=b; send.disabled=b; send.style.opacity=b?.5:1; }
   function ask(q){
-    bub('user', q.replace(/</g,'&lt;'));
+    if(waiting) return;
+    q=q.trim(); if(!q) return;
+    bub('user', esc(q));
     var typing=bub('bot typing','Sark is thinking…');
-    used++; meter.textContent=used+' / 1,000 this month';
-    setTimeout(function(){ typing.remove(); bub('bot', answer(q)); },650);
+    setBusy(true);
+    var ctl=('AbortController' in window)?new AbortController():null;
+    var timer=setTimeout(function(){ if(ctl) ctl.abort(); },25000);
+    fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question:q,history:history.slice(-6)}),signal:ctl?ctl.signal:undefined})
+    .then(function(r){ return r.json().then(function(d){ return {status:r.status,d:d}; }); })
+    .then(function(res){
+      typing.remove();
+      if(res.status===200 && res.d.answer){
+        bub('bot', format(res.d.answer));
+        history.push({role:'user',text:q},{role:'assistant',text:res.d.answer});
+        extra++; try{ localStorage.setItem('sark-actions',String(extra)); }catch(e){}
+        showMeter();
+      } else if(res.status===429){
+        bub('bot','You’ve hit this demo’s question limit for the hour — try again in a bit.');
+      } else { bub('bot', canned(q)); }
+    })
+    .catch(function(){ typing.remove(); bub('bot', canned(q)); })
+    .then(function(){ clearTimeout(timer); setBusy(false); });
   }
   function openP(){ ov.classList.add('on'); setTimeout(function(){inp.focus()},80); }
   function closeP(){ ov.classList.remove('on'); }
   fab.addEventListener('click',openP);
   closeB.addEventListener('click',closeP);
   ov.addEventListener('click',function(e){ if(e.target===ov) closeP(); });
-  send.addEventListener('click',function(){ var v=inp.value.trim(); if(v){ask(v);inp.value='';} });
-  inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){var v=inp.value.trim(); if(v){ask(v);inp.value='';}} });
+  send.addEventListener('click',function(){ var v=inp.value; inp.value=''; ask(v); });
+  inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ var v=inp.value; inp.value=''; ask(v); } });
 })();
 </script>
