@@ -368,6 +368,112 @@
     .composer input,.intake-grid input,.intake-grid select,.intake-grid textarea{font-size:16px}
   }
 
+  /* ---------- LIVE badge on nav ---------- */
+  .snav .badge.live{
+    background:none;color:var(--ok);border:1px solid #5CB17655;
+    font-size:8.5px;letter-spacing:.14em;padding:0 7px;height:18px;
+  }
+  .snav .badge.live::before{
+    content:"";width:6px;height:6px;border-radius:50%;background:var(--ok);
+    margin-right:5px;animation:pulse 1.3s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* ---------- call assist ---------- */
+  .agency-chips{display:flex;flex-wrap:wrap;gap:10px;padding:18px 20px}
+  .agency-chip{
+    text-align:left;background:var(--bg);border:1px solid var(--hair2);border-radius:6px;
+    padding:12px 15px;cursor:pointer;transition:all .2s;min-width:184px;flex:1;
+  }
+  .agency-chip:hover{border-color:var(--gold);transform:translateY(-1px)}
+  .agency-chip .ac-n{font-weight:600;font-size:13.5px}
+  .agency-chip .ac-s{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:4px;letter-spacing:.04em}
+
+  .call-board{min-height:60px}
+  .call-card{
+    display:flex;align-items:center;gap:14px;
+    padding:16px 20px;border-bottom:1px solid #1A283C;
+  }
+  .call-card:last-child{border-bottom:none}
+  .call-card .cc-dot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--dim)}
+  .call-card.dialing .cc-dot,.call-card.menu .cc-dot{background:var(--blue);animation:pulse 1s infinite}
+  .call-card.hold .cc-dot{background:var(--warn);animation:pulse 1.4s infinite}
+  .call-card.human{background:linear-gradient(90deg,#C9A05018,transparent);border-left:2px solid var(--gold)}
+  .call-card.human .cc-dot{background:var(--ok)}
+  .call-card .cc-main{flex:1;min-width:0}
+  .call-card .cc-co{font-weight:600;font-size:14.5px}
+  .call-card .cc-co small{color:var(--dim);font-weight:400}
+  .call-card .cc-status{font-family:var(--mono);font-size:11.5px;color:var(--dim);margin-top:4px;letter-spacing:.03em}
+  .call-card.hold .cc-status{color:var(--warn)}
+  .call-card.human .cc-status{color:var(--gold-hi)}
+  .call-card .cc-timer{font-family:var(--mono);font-size:12px;color:var(--warn);font-variant-numeric:tabular-nums;flex:none}
+  .call-card .cc-join{
+    background:linear-gradient(120deg,var(--gold),var(--gold-hi));color:#0A1220;
+    border:none;border-radius:99px;padding:10px 18px;font-weight:700;font-size:13px;cursor:pointer;flex:none;
+    animation:pulse 1.2s infinite;
+  }
+  .call-alert{
+    background:linear-gradient(120deg,var(--gold),var(--gold-hi));color:#0A1220;
+    border-radius:6px;padding:14px 18px;margin-bottom:18px;font-weight:600;font-size:14px;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;animation:fade .35s ease;
+  }
+  .call-alert .ca-join{
+    margin-left:auto;background:#0A1220;color:var(--gold-hi);border:none;
+    border-radius:99px;padding:9px 18px;font-weight:700;cursor:pointer;font-size:13px;
+  }
+
+  /* ---------- ask sark ---------- */
+  .sark-fab{
+    position:fixed;right:22px;bottom:22px;z-index:70;
+    display:flex;align-items:center;gap:8px;
+    background:linear-gradient(120deg,var(--gold),var(--gold-hi));color:#0A1220;
+    border:none;border-radius:99px;padding:13px 20px;font-weight:700;font-size:14px;cursor:pointer;
+    box-shadow:0 8px 28px #00000077;font-family:var(--sans);
+  }
+  .sark-fab .sf-spark{font-size:16px}
+  .sark-fab:hover{filter:brightness(1.05)}
+  body.msg-open .sark-fab{display:none}
+  .sark-overlay{position:fixed;inset:0;background:#05090fcc;z-index:90;display:none;align-items:stretch;justify-content:flex-end}
+  .sark-overlay.on{display:flex}
+  .sark-panel{
+    width:min(440px,100%);background:var(--bg2);border-left:1px solid var(--hair2);
+    display:flex;flex-direction:column;animation:slidein .3s cubic-bezier(.2,.8,.2,1);
+  }
+  .sark-h{display:flex;align-items:center;gap:10px;padding:15px 16px;border-bottom:1px solid var(--hair);background:var(--card2)}
+  .sark-id{display:flex;align-items:center;gap:10px;min-width:0}
+  .sark-id .sf-spark{width:34px;height:34px;border-radius:50%;background:linear-gradient(120deg,var(--gold),var(--gold-hi));
+    color:#0A1220;display:flex;align-items:center;justify-content:center;font-size:17px;flex:none}
+  .sark-nm{font-weight:700;font-size:15px}
+  .sark-sub{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
+  .sark-meter{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--gold-hi);
+    border:1px solid #C9A05055;background:#C9A05012;padding:5px 9px;border-radius:99px;white-space:nowrap}
+  .sark-close{background:none;border:1px solid var(--hair2);color:var(--dim);width:32px;height:32px;
+    border-radius:4px;cursor:pointer;font-size:16px;flex:none}
+  .sark-close:hover{color:var(--ink);border-color:var(--dim)}
+  .sark-body{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+  .sark-bub{max-width:88%;padding:11px 14px;border-radius:12px;font-size:13.5px;line-height:1.5}
+  .sark-bub.user{align-self:flex-end;background:#1D3450;border:1px solid #2C4A6E;border-bottom-right-radius:3px}
+  .sark-bub.bot{align-self:flex-start;background:var(--card2);border:1px solid var(--hair2);border-bottom-left-radius:3px}
+  .sark-bub.bot b{color:var(--gold-hi)}
+  .sark-bub.bot i{color:var(--ink);font-style:italic}
+  .sark-bub.typing{color:var(--dim);font-family:var(--mono);font-size:12px}
+  .sark-suggest{display:flex;flex-wrap:wrap;gap:8px;padding:0 18px 12px}
+  .sark-chip{background:none;border:1px solid var(--hair2);color:var(--gold-hi);font-size:12px;
+    padding:8px 12px;border-radius:99px;cursor:pointer;text-align:left;font-family:var(--sans)}
+  .sark-chip:hover{border-color:var(--gold);background:#C9A05010}
+  .sark-composer{display:flex;gap:10px;padding:14px 16px;border-top:1px solid var(--hair);background:var(--bg)}
+  .sark-composer input{flex:1;background:var(--card);border:1px solid var(--hair2);color:var(--ink);
+    padding:11px 14px;border-radius:99px;font-size:13.5px;outline:none;font-family:var(--sans)}
+  .sark-composer input:focus{border-color:var(--gold)}
+  .sark-composer button{background:linear-gradient(120deg,var(--gold),var(--gold-hi));color:#0A1220;
+    border:none;border-radius:99px;padding:0 20px;font-weight:600;cursor:pointer;font-size:13.5px}
+  @media(max-width:880px){
+    .sark-panel{width:100%}
+    .sark-fab{bottom:16px;right:16px;padding:12px 17px}
+    .sark-composer input{font-size:16px}
+    .agency-chip{min-width:100%}
+  }
+
   .footnote{
     margin-top:34px;text-align:center;
     font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--dim);
@@ -411,10 +517,10 @@
   <button class="snav" data-v="carriers"><span class="ic">02</span>Carriers</button>
   <button class="snav" data-v="renewals"><span class="ic">03</span>Renewals</button>
   <button class="snav" data-v="intake"><span class="ic">04</span>New Carrier</button>
-  <button class="snav" data-v="msgs"><span class="ic">05</span>Messages<span class="badge">3</span></button>
-  <button class="snav ghost"><span class="ic">06</span>Documents<span class="soon">Soon</span></button>
-  <button class="snav ghost"><span class="ic">07</span>Reports<span class="soon">Soon</span></button>
-  <button class="snav ghost"><span class="ic">08</span>Billing<span class="soon">Soon</span></button>
+  <button class="snav" data-v="calls"><span class="ic">05</span>Call Assist<span class="badge live">LIVE</span></button>
+  <button class="snav" data-v="msgs"><span class="ic">06</span>Messages<span class="badge">3</span></button>
+  <button class="snav ghost"><span class="ic">07</span>Documents<span class="soon">Soon</span></button>
+  <button class="snav ghost"><span class="ic">08</span>Reports<span class="soon">Soon</span></button>
   <div class="spacer"></div>
   <div class="userchip"><div class="av">A</div><div class="nm">Angela<small>Owner · 4PL</small></div></div>
 </aside>
@@ -433,6 +539,7 @@
   <button class="tab" data-v="carriers">Carriers</button>
   <button class="tab" data-v="renewals">Renewals</button>
   <button class="tab" data-v="intake">New Carrier</button>
+  <button class="tab" data-v="calls">Call Assist</button>
   <button class="tab" data-v="msgs">Messages</button>
 </div>
 
@@ -530,6 +637,42 @@
     </div>
   </div>
 
+  <!-- ============ CALL ASSIST ============ -->
+  <div class="view" id="v-calls">
+    <div class="msg-explain">
+      <b>You're on hold all day. Not anymore.</b> Pick the agencies you need to reach —
+      <b>Sark</b> dials them all at once, sits through the hold music and the phone-tree menus,
+      and the second a real person picks up, <b>your phone rings and Sark hands you the live agent.</b>
+      You never wait on hold again.
+    </div>
+
+    <div id="call-alert" class="call-alert" hidden></div>
+
+    <div class="panel">
+      <div class="panel-h">
+        <h2>Start a call — who do you need?</h2>
+        <span class="code">Tap and Sark dials</span>
+      </div>
+      <div class="agency-chips" id="agency-chips"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">
+        <h2>Sark is calling for you</h2>
+        <span class="code" id="calls-live-count">—</span>
+      </div>
+      <div id="call-board" class="call-board"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">
+        <h2>Earlier today — time Sark saved you</h2>
+        <span class="code">Call log</span>
+      </div>
+      <div id="call-log" style="padding:8px 20px 14px"></div>
+    </div>
+  </div>
+
   <!-- ============ MESSAGES ============ -->
   <div class="view" id="v-msgs">
     <div class="msg-explain">
@@ -559,6 +702,30 @@
 <!-- ============ DRAWER ============ -->
 <div class="overlay" id="overlay">
   <div class="drawer" id="drawer"></div>
+</div>
+
+<!-- ============ ASK SARK ============ -->
+<button id="sark-fab" class="sark-fab" aria-label="Ask Sark">
+  <span class="sf-spark">✦</span><span class="sf-label">Ask Sark</span>
+</button>
+<div class="sark-overlay" id="sark-overlay">
+  <div class="sark-panel" id="sark-panel">
+    <div class="sark-h">
+      <div class="sark-id"><span class="sf-spark">✦</span>
+        <div><div class="sark-nm">Ask Sark</div><div class="sark-sub">Your AI assistant</div></div>
+      </div>
+      <div class="sark-meter" id="sark-meter" title="AI usage this month">47 / 1,000 this month</div>
+      <button class="sark-close" id="sark-close" aria-label="Close">×</button>
+    </div>
+    <div class="sark-body" id="sark-body">
+      <div class="sark-bub bot">Hi Angela — I can look things up across all 1,204 carriers, draft a text or email, or summarize a document someone sends in. Try one of these:</div>
+    </div>
+    <div class="sark-suggest" id="sark-suggest"></div>
+    <div class="sark-composer">
+      <input id="sark-input" placeholder="Ask Sark anything about your carriers…">
+      <button id="sark-send">Ask</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -870,7 +1037,7 @@
 
   /* ---------- swipe left/right to change tabs ---------- */
   (function(){
-    var ORDER=['dash','carriers','renewals','intake','msgs'];
+    var ORDER=['dash','carriers','renewals','intake','calls','msgs'];
     var x0=0,y0=0,t0=0,tracking=false;
     /* don't hijack a swipe that belongs to something scrolling sideways */
     function inSideScroller(el){
@@ -893,6 +1060,8 @@
       if(e.touches.length!==1) return;
       var ov=document.getElementById('overlay');
       if(ov && ov.classList.contains('on')) return;      /* carrier file is open */
+      var sov=document.getElementById('sark-overlay');
+      if(sov && sov.classList.contains('on')) return;    /* Ask Sark panel is open */
       if(inSideScroller(e.target)) return;
       var t=e.touches[0]; x0=t.clientX; y0=t.clientY; t0=Date.now(); tracking=true;
     },{passive:true});
@@ -913,5 +1082,162 @@
       switchView(ORDER[j], dx<0?'next':'prev');
     },{passive:true});
   })();
+})();
+
+/* ================= CALL ASSIST (hold-bot) ================= */
+(function(){
+  var AGENCIES=[
+    {name:"FMCSA",                  sub:"DOT/MC authority · MCS-150", ph:"(800) 832-5660"},
+    {name:"CA DMV — Motor Carrier", sub:"CA MCP permit",              ph:"(916) 657-8153"},
+    {name:"CARB — Clean Truck Check",sub:"CTC compliance",            ph:"(866) 634-3735"},
+    {name:"IRP / Apportioned Reg.", sub:"Cab cards & registration",   ph:"(916) 657-7971"},
+    {name:"Progressive Commercial", sub:"Insurance / COI",            ph:"(800) 444-4487"},
+    {name:"UCR Registration",       sub:"Annual UCR filing",          ph:"(833) 827-7626"}
+  ];
+  var board=document.getElementById('call-board'),
+      chipsWrap=document.getElementById('agency-chips'),
+      alertBox=document.getElementById('call-alert'),
+      liveCount=document.getElementById('calls-live-count'),
+      logWrap=document.getElementById('call-log');
+  if(!board) return;
+  var calls=[], uid=0;
+
+  function addCall(ag,opts){
+    opts=opts||{};
+    calls.push({id:++uid,ag:ag,state:opts.state||'dialing',hold:opts.hold||0,
+                _target:opts.target||(4+Math.floor(Math.random()*13)),_t:0});
+    renderBoard();
+  }
+  function stateText(c){
+    if(c.state==='dialing')return 'Dialing '+c.ag.ph+'…';
+    if(c.state==='menu')   return 'In the phone menu — pressed 2, then 1…';
+    if(c.state==='hold')   return 'On hold · '+c.hold+' min';
+    if(c.state==='human')  return 'A real person just picked up';
+    return '';
+  }
+  function renderBoard(){
+    var live=0; board.innerHTML='';
+    calls.forEach(function(c){
+      if(c.state!=='done') live++;
+      var right = c.state==='human' ? '<button class="cc-join">Join call ▸</button>'
+                : (c.state==='hold' ? '<span class="cc-timer">'+c.hold+' min</span>' : '');
+      var el=document.createElement('div');
+      el.className='call-card '+c.state;
+      el.innerHTML='<span class="cc-dot"></span>'+
+        '<div class="cc-main"><div class="cc-co">'+c.ag.name+' <small>· '+c.ag.sub+'</small></div>'+
+        '<div class="cc-status">'+stateText(c)+'</div></div>'+right;
+      if(c.state==='human') el.querySelector('.cc-join').addEventListener('click',function(){joinCall(c)});
+      board.appendChild(el);
+    });
+    if(!calls.some(function(c){return c.state!=='done'})){
+      board.innerHTML='<div style="padding:22px 20px;color:var(--dim);font-size:13.5px">No active calls. Tap an agency above and Sark starts dialing — go do something else, it’ll ping you.</div>';
+    }
+    liveCount.textContent = live? (live+' on the line now') : 'idle';
+  }
+  function fireHumanAlert(c){
+    alertBox.hidden=false;
+    alertBox.innerHTML='✦ <b>'+c.ag.name+'</b> — a real person is on the line. Sark waited '+c.hold+' min on hold for you.'+
+      '<button class="ca-join">Talk now ▸</button>';
+    alertBox.querySelector('.ca-join').addEventListener('click',function(){joinCall(c)});
+  }
+  function joinCall(c){
+    c.state='done'; alertBox.hidden=true;
+    var el=document.createElement('div'); el.className='note';
+    el.innerHTML='<b>'+c.ag.name+'</b> — you joined and spoke to a live agent. Sark saved you '+c.hold+' min on hold.<span class="when">TODAY · just now</span>';
+    logWrap.insertBefore(el,logWrap.firstChild);
+    renderBoard();
+  }
+  AGENCIES.forEach(function(ag){
+    var b=document.createElement('button'); b.className='agency-chip';
+    b.innerHTML='<div class="ac-n">'+ag.name+'</div><div class="ac-s">'+ag.sub+'</div>';
+    b.addEventListener('click',function(){ addCall(ag,{state:'dialing'}); });
+    chipsWrap.appendChild(b);
+  });
+  /* seed the call log so the "time saved" panel isn't empty */
+  logWrap.innerHTML=
+    '<div class="note"><b>IRP / Apportioned Reg.</b> — reached a live agent in 22 min. You updated 3 cab cards and hung up.<span class="when">TODAY · 8:37 AM</span></div>'+
+    '<div class="note"><b>UCR Registration</b> — Sark left your callback number; agent will call back this afternoon.<span class="when">TODAY · 8:05 AM</span></div>';
+  /* preload a few live calls — one connects within seconds for the demo */
+  addCall(AGENCIES[0],{state:'hold',hold:7,target:9});   /* FMCSA — connects ~2s */
+  addCall(AGENCIES[1],{state:'hold',hold:3,target:15});  /* CA DMV — still holding */
+  addCall(AGENCIES[2],{state:'menu'});                   /* CARB — navigating menu */
+
+  setInterval(function(){
+    var dirty=false;
+    calls.forEach(function(c){
+      if(c.state==='done'||c.state==='human') return;
+      dirty=true;
+      if(c.state==='dialing'){ if(++c._t>=2){c.state='menu';c._t=0;} }
+      else if(c.state==='menu'){ if(++c._t>=2){c.state='hold';c.hold=0;c._target=c._target||(4+Math.floor(Math.random()*13));} }
+      else if(c.state==='hold'){ c.hold++; if(c.hold>=c._target){c.state='human';fireHumanAlert(c);} }
+    });
+    if(dirty) renderBoard();
+  },1000);
+})();
+
+/* ================= ASK SARK (AI assistant) ================= */
+(function(){
+  var fab=document.getElementById('sark-fab'),
+      ov=document.getElementById('sark-overlay'),
+      body=document.getElementById('sark-body'),
+      sugg=document.getElementById('sark-suggest'),
+      inp=document.getElementById('sark-input'),
+      send=document.getElementById('sark-send'),
+      meter=document.getElementById('sark-meter'),
+      closeB=document.getElementById('sark-close');
+  if(!fab) return;
+  var used=47;
+  var SUGGEST=["Who's overdue right now?","Draft a reminder text to Narek about his Clean Truck Check",
+               "What does Sevan Logistics still owe me?","Summarize today"];
+  SUGGEST.forEach(function(s){
+    var b=document.createElement('button'); b.className='sark-chip'; b.textContent=s;
+    b.addEventListener('click',function(){ask(s)});
+    sugg.appendChild(b);
+  });
+  function bub(cls,html){
+    var el=document.createElement('div'); el.className='sark-bub '+cls; el.innerHTML=html;
+    body.appendChild(el); body.scrollTop=body.scrollHeight; return el;
+  }
+  function answer(q){
+    q=q.toLowerCase();
+    if(/overdue|late|behind/.test(q))
+      return "Two items are overdue right now:<br><br>"+
+        "• <b>H&amp;G Transport LLC</b> — IRP Registration, <b>6 days late</b><br>"+
+        "• <b>Vardavar Logistics</b> — CARB Clean Truck Check, <b>13 days late</b> (the truck can’t legally run until it clears)<br><br>"+
+        "Want me to text both of them a reminder now?";
+    if(/narek|clean truck|vardavar|\bctc\b/.test(q))
+      return "Here’s a draft text to <b>Narek Osipyan (Vardavar Logistics)</b>:<br><br>"+
+        "<i>“Hi Narek — your CARB Clean Truck Check is now 13 days overdue and the truck can’t legally run until it clears. "+
+        "You said you’d test this morning — can you send me the certificate today so I can file it and get you back on the road? — Angela”</i><br><br>"+
+        "Want me to send it to (818) 555-0171? You approve before anything goes out.";
+    if(/sevan|karine|owe|still need|missing/.test(q))
+      return "<b>Sevan Logistics LLC (Karine Avagyan)</b> — CA intrastate, 1 truck. Still outstanding:<br><br>"+
+        "• <b>CA MCP renewal</b> — due in 9 days<br>"+
+        "• <b>CARB Clean Truck Check</b> — due in 41 days<br><br>"+
+        "She texted her insurance page this morning (already filed). She’s bringing the rest Thursday.";
+    if(/summar|today|activity|what happened/.test(q))
+      return "<b>Today so far:</b><br><br>"+
+        "• 17 documents in this week, 4 still waiting to be filed<br>"+
+        "• Hakob (H&amp;G) sent his COI + cab card — filed automatically<br>"+
+        "• Reminders went to 6 carriers with October CA MCP renewals — 2 replied<br>"+
+        "• <b>2 overdue</b> and <b>7 due in the next 30 days</b> — want the list?";
+    if(/draft|email|write|remind|text/.test(q))
+      return "I can draft that. Tell me the carrier and what it’s about and I’ll write it in your voice — you always approve before anything sends.";
+    return "I can pull that straight from your carrier records. In the full system I’d look across all 1,204 files and answer instantly — "+
+      "who’s overdue, what a carrier still owes, drafting a reminder, or summarizing a document someone just sent in. What would you like me to check?";
+  }
+  function ask(q){
+    bub('user', q.replace(/</g,'&lt;'));
+    var typing=bub('bot typing','Sark is thinking…');
+    used++; meter.textContent=used+' / 1,000 this month';
+    setTimeout(function(){ typing.remove(); bub('bot', answer(q)); },650);
+  }
+  function openP(){ ov.classList.add('on'); setTimeout(function(){inp.focus()},80); }
+  function closeP(){ ov.classList.remove('on'); }
+  fab.addEventListener('click',openP);
+  closeB.addEventListener('click',closeP);
+  ov.addEventListener('click',function(e){ if(e.target===ov) closeP(); });
+  send.addEventListener('click',function(){ var v=inp.value.trim(); if(v){ask(v);inp.value='';} });
+  inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){var v=inp.value.trim(); if(v){ask(v);inp.value='';}} });
 })();
 </script>
