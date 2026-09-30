@@ -1465,6 +1465,7 @@
     if(waiting) return;
     q=q.trim(); if(!q) return;
     bub('user', esc(q));
+    sugg.hidden=true;   /* suggestions are for getting started; give the conversation the room */
     var typing=bub('bot typing','Sark is working…');
     setBusy(true);
     var ctl=('AbortController' in window)?new AbortController():null;
