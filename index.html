@@ -501,7 +501,27 @@
   .sark-composer input:focus{border-color:var(--gold)}
   .sark-composer button{background:linear-gradient(120deg,var(--gold),var(--gold-hi));color:#0A1220;
     border:none;border-radius:99px;padding:0 20px;font-weight:600;cursor:pointer;font-size:13.5px}
+  .sark-act{align-self:flex-start;width:88%;background:var(--bg);border:1px solid var(--hair2);
+    border-left:2px solid var(--ok);border-radius:8px;padding:10px 12px;font-size:13px}
+  .sark-act .sa-h{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--ok);text-transform:uppercase;margin-bottom:3px}
+  .sark-act .sa-t{color:var(--ink);line-height:1.45}
+  .sark-act .sa-link{background:none;border:none;color:var(--gold-hi);cursor:pointer;padding:0;margin-top:5px;
+    font-size:12px;text-decoration:underline;font-family:var(--sans)}
+  .sark-act.draft{border-left-color:var(--gold)}
+  .sark-act.draft .sa-h{color:var(--gold-hi)}
+  .sark-act.warn{border-left-color:var(--warn)}
+  .sark-act.warn .sa-h{color:var(--warn)}
+  .sark-act.muted{opacity:.6}
+  .sark-act textarea{width:100%;min-height:78px;background:var(--card);border:1px solid var(--hair2);color:var(--ink);
+    border-radius:6px;padding:8px 10px;font:inherit;font-size:13px;line-height:1.45;resize:vertical;margin:6px 0 8px;outline:none}
+  .sark-act textarea:focus{border-color:var(--gold)}
+  .sark-act .sa-btns{display:flex;gap:8px}
+  .sark-act .sa-send{background:linear-gradient(120deg,var(--gold),var(--gold-hi));color:#0A1220;border:none;
+    border-radius:99px;padding:7px 15px;font-weight:700;cursor:pointer;font-size:12.5px}
+  .sark-act .sa-cancel{background:none;border:1px solid var(--hair2);color:var(--dim);border-radius:99px;
+    padding:7px 13px;cursor:pointer;font-size:12.5px}
   @media(max-width:880px){
+    .sark-act textarea{font-size:16px}
     .sark-panel{width:100%}
     .sark-fab{bottom:16px;right:16px;padding:12px 17px}
     .sark-composer input{font-size:16px}
@@ -582,7 +602,7 @@
   <!-- ============ DASHBOARD ============ -->
   <div class="view on" id="v-dash">
     <div class="tiles">
-      <div class="tile gold" data-go="carriers"><div class="k">Active carriers</div><div class="v">1,204</div><div class="sub">+3 this month</div></div>
+      <div class="tile gold" data-go="carriers"><div class="k">Active carriers</div><div class="v" id="t-active">1,204</div><div class="sub">+3 this month</div></div>
       <div class="tile warn" data-go="renewals"><div class="k">Due in 30 days</div><div class="v" id="t-due30">—</div><div class="sub">registrations &amp; permits</div></div>
       <div class="tile bad" data-go="renewals"><div class="k">Overdue</div><div class="v" id="t-over">—</div><div class="sub">needs a call today</div></div>
       <div class="tile" data-go="carriers"><div class="k">Docs received this week</div><div class="v">17</div><div class="sub">4 waiting to be filed</div></div>
@@ -604,7 +624,7 @@
         <h2>Recent activity</h2>
         <span class="code">Everything gets logged</span>
       </div>
-      <div style="padding:14px 20px 18px">
+      <div id="activity" style="padding:14px 20px 18px">
         <div class="note"><b>Hakob G. — H&amp;G Transport LLC</b> emailed 2 documents: insurance COI + cab card. Filed automatically to his folder.<span class="when">TODAY · 9:14 AM</span></div>
         <div class="note"><b>Reminder sent</b> to 6 carriers with CA MCP renewals due in October. 2 already replied.<span class="when">TODAY · 8:00 AM</span></div>
         <div class="note"><b>Ararat Freight Inc</b> — new entrant audit passed. Status moved to Active.<span class="when">YESTERDAY · 3:40 PM</span></div>
@@ -752,7 +772,7 @@
       <button class="sark-close" id="sark-close" aria-label="Close">×</button>
     </div>
     <div class="sark-body" id="sark-body">
-      <div class="sark-bub bot">Hi Angela — I can look things up across all 1,204 carriers, draft a text or email, or summarize a document someone sends in. Try one of these:</div>
+      <div class="sark-bub bot">Hi Angela — ask me anything about your carriers, or just tell me what to do: add a note, update a date, mark something done, text a driver, or get an agency on the phone.</div>
     </div>
     <div class="sark-suggest" id="sark-suggest"></div>
     <div class="sark-composer">
@@ -835,27 +855,33 @@
   }
   var PILL = {ok:'<span class="pill ok">Current</span>', warn:'<span class="pill warn">Due soon</span>', bad:'<span class="pill bad">Overdue</span>'};
 
-  /* ---------- dashboard ---------- */
+  /* ---------- dashboard (re-rendered whenever Sark changes a record) ---------- */
   var allItems = [];
-  CARRIERS.forEach(function(c){ c.items.forEach(function(i){ if(!i.done) allItems.push({c:c,i:i}); }); });
-  allItems.sort(function(a,b){return a.i.due-b.i.due});
-  var due30 = allItems.filter(function(x){var n=daysOut(x.i.due); return n>=0 && n<=30}).length;
-  var over  = allItems.filter(function(x){return daysOut(x.i.due)<0}).length;
-  document.getElementById('t-due30').textContent = due30;
-  document.getElementById('t-over').textContent = over;
-
+  function collectItems(){
+    allItems = [];
+    CARRIERS.forEach(function(c){ c.items.forEach(function(i){ if(!i.done) allItems.push({c:c,i:i}); }); });
+    allItems.sort(function(a,b){return a.i.due-b.i.due});
+  }
   var dueBody = document.querySelector('#due-table tbody');
-  allItems.slice(0,8).forEach(function(x){
-    var n = daysOut(x.i.due);
-    var cls = n<0?'bad':(n<=30?'warn':'');
-    var tr = document.createElement('tr');
-    tr.innerHTML = '<td class="co">'+x.c.co+'<small>'+x.c.name+'</small></td>'+
-      '<td>'+x.i.n+'</td><td class="mono">'+x.c.dot+'</td>'+
-      '<td><span class="due-days '+cls+'">'+fmt(x.i.due)+' · '+(n<0?Math.abs(n)+' days late':n+' days')+'</span></td>'+
-      '<td>'+(n<0?PILL.bad:(n<=30?PILL.warn:PILL.ok))+'</td>';
-    tr.addEventListener('click',function(){openDrawer(x.c)});
-    dueBody.appendChild(tr);
-  });
+  function renderDash(){
+    collectItems();
+    document.getElementById('t-due30').textContent = allItems.filter(function(x){var n=daysOut(x.i.due); return n>=0 && n<=30}).length;
+    document.getElementById('t-over').textContent = allItems.filter(function(x){return daysOut(x.i.due)<0}).length;
+    document.getElementById('t-active').textContent = (1192+CARRIERS.length).toLocaleString('en-US');
+    dueBody.innerHTML='';
+    allItems.slice(0,8).forEach(function(x){
+      var n = daysOut(x.i.due);
+      var cls = n<0?'bad':(n<=30?'warn':'');
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td class="co">'+x.c.co+'<small>'+x.c.name+'</small></td>'+
+        '<td>'+x.i.n+'</td><td class="mono">'+x.c.dot+'</td>'+
+        '<td><span class="due-days '+cls+'">'+fmt(x.i.due)+' · '+(n<0?Math.abs(n)+' days late':n+' days')+'</span></td>'+
+        '<td>'+(n<0?PILL.bad:(n<=30?PILL.warn:PILL.ok))+'</td>';
+      tr.addEventListener('click',function(){openDrawer(x.c)});
+      dueBody.appendChild(tr);
+    });
+  }
+  renderDash();
 
   /* ---------- carriers table ---------- */
   var carBody = document.querySelector('#car-table tbody');
@@ -897,36 +923,41 @@
   });
 
   /* ---------- renewals ---------- */
-  var months = {};
-  allItems.forEach(function(x){
-    var key = x.i.due.toLocaleDateString('en-US',{month:'long',year:'numeric'});
-    (months[key] = months[key]||[]).push(x);
-  });
   var rWrap = document.getElementById('renewal-months');
-  Object.keys(months).forEach(function(m){
-    var h = document.createElement('div'); h.className='month-h';
-    h.innerHTML = m + ' <span class="n">'+months[m].length+' item'+(months[m].length>1?'s':'')+'</span>';
-    rWrap.appendChild(h);
-    var p = document.createElement('div'); p.className='panel';
-    var t = document.createElement('table');
-    t.innerHTML='<tbody></tbody>';
-    months[m].forEach(function(x){
-      var n=daysOut(x.i.due);
-      var tr=document.createElement('tr');
-      tr.innerHTML='<td class="co">'+x.c.co+'<small>'+x.i.n+'</small></td>'+
-        '<td class="mono">'+x.c.dot+'</td>'+
-        '<td><span class="due-days '+(n<0?'bad':(n<=30?'warn':''))+'">'+fmt(x.i.due)+'</span></td>'+
-        '<td>'+(n<0?PILL.bad:(n<=30?PILL.warn:PILL.ok))+'</td>';
-      tr.addEventListener('click',function(){openDrawer(x.c)});
-      t.querySelector('tbody').appendChild(tr);
+  function renderRenewals(){
+    var months = {};
+    allItems.forEach(function(x){
+      var key = x.i.due.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+      (months[key] = months[key]||[]).push(x);
     });
-    p.appendChild(t); rWrap.appendChild(p);
-  });
+    rWrap.innerHTML='';
+    Object.keys(months).forEach(function(m){
+      var hd = document.createElement('div'); hd.className='month-h';
+      hd.innerHTML = m + ' <span class="n">'+months[m].length+' item'+(months[m].length>1?'s':'')+'</span>';
+      rWrap.appendChild(hd);
+      var p = document.createElement('div'); p.className='panel';
+      var t = document.createElement('table');
+      t.innerHTML='<tbody></tbody>';
+      months[m].forEach(function(x){
+        var n=daysOut(x.i.due);
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td class="co">'+x.c.co+'<small>'+x.i.n+'</small></td>'+
+          '<td class="mono">'+x.c.dot+'</td>'+
+          '<td><span class="due-days '+(n<0?'bad':(n<=30?'warn':''))+'">'+fmt(x.i.due)+'</span></td>'+
+          '<td>'+(n<0?PILL.bad:(n<=30?PILL.warn:PILL.ok))+'</td>';
+        tr.addEventListener('click',function(){openDrawer(x.c)});
+        t.querySelector('tbody').appendChild(tr);
+      });
+      p.appendChild(t); rWrap.appendChild(p);
+    });
+  }
+  renderRenewals();
 
   /* ---------- drawer ---------- */
   var overlay = document.getElementById('overlay'), drawer = document.getElementById('drawer');
+  var openCarrier = null;
   function openDrawer(c){
-    var ni = nextItem(c);
+    openCarrier = c;
     drawer.innerHTML =
       '<button class="close" aria-label="Close">×</button>'+
       '<h2>'+c.co+'</h2><div class="dtype">'+(c.type==='intra'?'CA Intrastate':'Interstate · 48-State')+' Carrier</div>'+
@@ -955,7 +986,7 @@
     drawer.querySelector('.close').addEventListener('click',closeDrawer);
     overlay.classList.add('on');
   }
-  function closeDrawer(){ overlay.classList.remove('on'); }
+  function closeDrawer(){ overlay.classList.remove('on'); openCarrier = null; }
   overlay.addEventListener('click',function(e){ if(e.target===overlay) closeDrawer(); });
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeDrawer(); });
 
@@ -1068,6 +1099,94 @@
   document.querySelectorAll('.tile[data-go]').forEach(function(t){
     t.addEventListener('click',function(){switchView(t.dataset.go)});
   });
+
+  /* ---------- Sark actions: the assistant changes real records on screen ---------- */
+  (function(){
+    function iso(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+    function parseISO(s){ var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||''); return m? new Date(+m[1],+m[2]-1,+m[3]) : null; }
+    function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function findCarrier(name){ name=String(name||'').toLowerCase(); return CARRIERS.filter(function(c){return c.co.toLowerCase()===name})[0]; }
+    function findItem(c,name){ name=String(name||'').toLowerCase();
+      return c.items.filter(function(i){return i.n.toLowerCase()===name})[0]; }
+    var actWrap=document.getElementById('activity');
+    function activity(html){
+      var n=document.createElement('div'); n.className='note';
+      n.innerHTML='\u2726 '+html+'<span class="when">TODAY · JUST NOW · BY SARK</span>';
+      actWrap.insertBefore(n,actWrap.firstChild);
+    }
+    function refresh(){
+      renderDash(); renderCarriers(); renderRenewals();
+      if(openCarrier && overlay.classList.contains('on')) openDrawer(openCarrier);
+    }
+    window.FOURPL={
+      /* what the assistant is told about the office right now */
+      snapshot:function(){
+        return {
+          carriers:CARRIERS.map(function(c){return {co:c.co,name:c.name,phone:c.phone,dot:c.dot,mc:c.mc,type:c.type,trucks:c.trucks,
+            items:c.items.map(function(i){return {n:i.n,due:iso(i.due),done:!!i.done}}),docs:c.docs,notes:c.notes}}),
+          threads:THREADS.map(function(t){return {co:t.co,who:t.who,phone:t.phone,
+            msgs:t.msgs.slice(-6).map(function(m){return {dir:m.dir,t:m.t,w:m.w,doc:m.doc?m.doc[1]:null}})}})
+        };
+      },
+      /* apply one validated action from the assistant; returns a label for the chat card */
+      apply:function(a){
+        var c=findCarrier(a.carrier), it, d;
+        switch(a.type){
+          case 'add_note':
+            if(!c) break;
+            c.notes.unshift([a.note,'Today · added by Sark']);
+            activity('Added a note to <b>'+esc(c.co)+'</b>: \u201C'+esc(a.note)+'\u201D');
+            refresh(); return {ok:true,head:'Note added',text:c.co+' \u2014 \u201C'+a.note+'\u201D',co:c.co};
+          case 'mark_item_done':
+            if(!c || !(it=findItem(c,a.item))) break;
+            it.done=true;
+            activity('Marked <b>'+esc(it.n)+'</b> complete for <b>'+esc(c.co)+'</b>');
+            refresh(); return {ok:true,head:'Marked complete',text:it.n+' \u00B7 '+c.co,co:c.co};
+          case 'update_due_date':
+            if(!c || !(it=findItem(c,a.item)) || !(d=parseISO(a.due_date))) break;
+            it.due=d;
+            activity('Moved <b>'+esc(it.n)+'</b> for <b>'+esc(c.co)+'</b> to '+fmt(d));
+            refresh(); return {ok:true,head:'Due date changed',text:it.n+' \u00B7 '+c.co+' \u2192 '+fmt(d),co:c.co};
+          case 'add_compliance_item':
+            if(!c || !(d=parseISO(a.due_date))) break;
+            c.items.push({n:a.item,due:d});
+            activity('Added <b>'+esc(a.item)+'</b> (due '+fmt(d)+') to <b>'+esc(c.co)+'</b>');
+            refresh(); return {ok:true,head:'Item added',text:a.item+' due '+fmt(d)+' \u00B7 '+c.co,co:c.co};
+          case 'create_carrier':
+            if(c) break;
+            c={co:a.carrier,name:a.contact_name||'\u2014',phone:a.phone||'\u2014',dot:'Pending',mc:'\u2014',
+               type:a.operation==='inter'?'inter':'intra',trucks:a.trucks||1,
+               items:(a.items||[]).map(function(x){return {n:x.item,due:parseISO(x.due_date)}}).filter(function(x){return x.due}),
+               docs:[],notes:[['New carrier file created by Sark','Today']]};
+            CARRIERS.unshift(c);
+            activity('Created a carrier file for <b>'+esc(c.co)+'</b>');
+            refresh(); return {ok:true,head:'Carrier file created',text:c.co+(c.items.length?' \u00B7 '+c.items.map(function(i){return i.n+' due '+fmt(i.due)}).join(', '):''),co:c.co};
+          case 'start_hold_call':
+            if(!(window.FOURPL_CALLS && FOURPL_CALLS.start(a.agency))) break;
+            activity('Started a Call Assist call to <b>'+esc(a.agency)+'</b>'+(a.reason?' \u2014 '+esc(a.reason):''));
+            return {ok:true,head:'Calling',text:a.agency+' \u2014 your desk phone rings when a real person picks up',calls:true};
+        }
+        return {ok:false};
+      },
+      /* only runs when Angela taps Send on a drafted text */
+      sendText:function(co,text){
+        var c=findCarrier(co); if(!c) return null;
+        var t=THREADS.filter(function(x){return x.co===c.co})[0];
+        if(!t){ t={co:c.co,who:c.name,phone:c.phone,when:'NOW',msgs:[]}; THREADS.push(t); }
+        t.msgs.push({dir:'out',t:text,w:'NOW \u00B7 SENT AS TEXT'}); t.when='NOW';
+        renderThreads(); renderConvo();
+        activity('Text sent to <b>'+esc(t.who)+'</b> ('+esc(c.co)+'): \u201C'+esc(text)+'\u201D');
+        return {who:t.who,phone:t.phone};
+      },
+      showCarrier:function(co){ var c=findCarrier(co); if(c) openDrawer(c); },
+      showThread:function(co){
+        var i=-1; THREADS.forEach(function(t,k){ if(t.co===co) i=k; });
+        switchView('msgs'); if(i<0) return;
+        curThread=i; THREADS[i].unread=false; renderThreads(); renderConvo(); openThread();
+      },
+      showCalls:function(){ switchView('calls'); }
+    };
+  })();
 
   /* ---------- swipe left/right to change tabs ---------- */
   (function(){
@@ -1227,6 +1346,13 @@
     });
     chipsWrap.appendChild(b);
   });
+  /* lets Ask Sark start a call by agency name */
+  window.FOURPL_CALLS={start:function(name){
+    var ag=AGENCIES.filter(function(a){return a.name===name})[0];
+    if(!ag) return false;
+    if(!active().some(function(c){return c.ag===ag})) addCall(ag,{state:'dialing'});
+    return true;
+  }};
   /* seed the call log so the "time saved" panel isn't empty */
   logWrap.innerHTML=
     '<div class="note"><b>IRP / Apportioned Reg.</b> — you talked to a live agent for 6:12. Sark sat on hold 22 min so you didn’t have to.<span class="when">TODAY · 8:37 AM</span></div>'+
@@ -1256,7 +1382,7 @@
   },1000);
 })();
 
-/* ================= ASK SARK (AI assistant) ================= */
+/* ================= ASK SARK (AI assistant — can take actions) ================= */
 (function(){
   var fab=document.getElementById('sark-fab'),
       ov=document.getElementById('sark-overlay'),
@@ -1266,61 +1392,96 @@
       send=document.getElementById('sark-send'),
       meter=document.getElementById('sark-meter'),
       closeB=document.getElementById('sark-close');
-  if(!fab) return;
+  if(!fab || !window.FOURPL) return;
   var ENDPOINT='https://rddksfsjzagscszpidoj.supabase.co/functions/v1/fourpl-ask-sark';
-  var BASE=47, extra=0, history=[], waiting=false;
+  var BASE=47, extra=0, history=[], log=[], waiting=false;
   try{ extra=parseInt(localStorage.getItem('sark-actions')||'0',10)||0; }catch(e){}
   function showMeter(){ meter.textContent=(BASE+extra)+' / 1,000 this month'; }
   showMeter();
 
-  var SUGGEST=["Who's overdue right now?","Draft a reminder text to Narek about his Clean Truck Check",
-               "What does Sevan Logistics still owe me?","Summarize today"];
+  var SUGGEST=["Who's overdue right now?","Text Narek a reminder about his Clean Truck Check",
+               "Add a note to Sevan's file: bringing docs Thursday","Call FMCSA for me"];
   SUGGEST.forEach(function(s){
     var b=document.createElement('button'); b.className='sark-chip'; b.textContent=s;
     b.addEventListener('click',function(){ask(s)});
     sugg.appendChild(b);
   });
-  function bub(cls,html){
-    var el=document.createElement('div'); el.className='sark-bub '+cls; el.innerHTML=html;
-    body.appendChild(el); body.scrollTop=body.scrollHeight; return el;
+  function el(cls,html){
+    var e=document.createElement('div'); e.className=cls; e.innerHTML=html;
+    body.appendChild(e); body.scrollTop=body.scrollHeight; return e;
   }
-  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  /* the model answers in plain text with **bold** — escape first, then format */
+  function bub(cls,html){ return el('sark-bub '+cls,html); }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function format(t){
     t=t.replace(/^\s*-{3,}\s*$/gm,'').replace(/\n{3,}/g,'\n\n').trim();
     return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
+  }
+  function closeP(){ ov.classList.remove('on'); }
+  function link(card,label,fn){
+    var b=document.createElement('button'); b.className='sa-link'; b.textContent=label;
+    b.addEventListener('click',function(){ closeP(); fn(); });
+    card.appendChild(b);
+  }
+  /* a finished action: green card with a way to go look at it */
+  function doneCard(a,r){
+    var card=el('sark-act','<div class="sa-h">✓ '+esc(r.head)+'</div><div class="sa-t">'+esc(r.text)+'</div>');
+    if(r.calls) link(card,'Watch the call →',FOURPL.showCalls);
+    else if(r.co) link(card,'Open carrier file →',function(){FOURPL.showCarrier(r.co)});
+    log.push(r.head+': '+r.text);
+  }
+  /* a drafted text: nothing is sent until she taps Send */
+  function draftCard(a){
+    var card=el('sark-act draft','<div class="sa-h">Draft text · '+esc(a.who)+' · '+esc(a.phone)+'</div>'+
+      '<textarea aria-label="Text message"></textarea><div class="sa-btns"><button class="sa-send">Send text</button><button class="sa-cancel">Cancel</button></div>');
+    var ta=card.querySelector('textarea'); ta.value=a.message;
+    card.querySelector('.sa-send').addEventListener('click',function(){
+      var msg=ta.value.trim(); if(!msg) return;
+      var r=FOURPL.sendText(a.carrier,msg);
+      if(!r){ card.className='sark-act warn'; card.innerHTML='<div class="sa-h">Couldn’t send</div><div class="sa-t">That carrier isn’t on file anymore.</div>'; return; }
+      card.className='sark-act';
+      card.innerHTML='<div class="sa-h">✓ Text sent · '+esc(r.who)+' · '+esc(r.phone)+'</div><div class="sa-t">'+esc(msg)+'</div>';
+      link(card,'Open the conversation →',function(){FOURPL.showThread(a.carrier)});
+      log.push('Angela approved and sent a text to '+r.who+' ('+a.carrier+'): "'+msg+'"');
+    });
+    card.querySelector('.sa-cancel').addEventListener('click',function(){
+      card.className='sark-act muted';
+      card.innerHTML='<div class="sa-h">Draft discarded</div><div class="sa-t">Nothing was sent to '+esc(a.who)+'.</div>';
+      log.push('Angela discarded the drafted text to '+a.who+' ('+a.carrier+')');
+    });
   }
   /* scripted answers — only used if the live assistant can't be reached */
   function canned(q){
     q=q.toLowerCase();
     if(/overdue|late|behind/.test(q))
       return "Two items are overdue right now:<br><br>• <b>H&amp;G Transport LLC</b> — IRP Registration, <b>6 days late</b><br>"+
-        "• <b>Vardavar Logistics</b> — CARB Clean Truck Check, <b>13 days late</b> (the truck can’t legally run until it clears)";
-    if(/narek|clean truck|vardavar|\bctc\b/.test(q))
-      return "Draft to <b>Narek Osipyan</b>:<br><br><i>“Hi Narek — your Clean Truck Check is 13 days overdue and the truck can’t run until it clears. "+
-        "Can you send me the certificate today so I can file it? — Angela”</i><br><br>You approve before anything goes out.";
-    if(/sevan|karine|owe/.test(q))
-      return "<b>Sevan Logistics LLC</b> still owes: <b>CA MCP renewal</b> (due in 9 days) and <b>CARB Clean Truck Check</b> (due in 41 days).";
-    return "<b>Today:</b> 17 documents in this week (4 waiting to be filed), Hakob’s COI and cab card filed automatically, "+
-      "reminders out to 6 carriers with October renewals, and <b>2 items overdue</b>.";
+        "• <b>Vardavar Logistics</b> — CARB Clean Truck Check, <b>13 days late</b>";
+    return "I couldn’t reach the assistant just now — give it a second and ask again.";
   }
   function setBusy(b){ waiting=b; inp.disabled=b; send.disabled=b; send.style.opacity=b?.5:1; }
   function ask(q){
     if(waiting) return;
     q=q.trim(); if(!q) return;
     bub('user', esc(q));
-    var typing=bub('bot typing','Sark is thinking…');
+    var typing=bub('bot typing','Sark is working…');
     setBusy(true);
     var ctl=('AbortController' in window)?new AbortController():null;
-    var timer=setTimeout(function(){ if(ctl) ctl.abort(); },25000);
+    var timer=setTimeout(function(){ if(ctl) ctl.abort(); },45000);
     fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({question:q,history:history.slice(-6)}),signal:ctl?ctl.signal:undefined})
+      body:JSON.stringify({question:q,history:history.slice(-8),state:FOURPL.snapshot(),log:log.slice(-25)}),
+      signal:ctl?ctl.signal:undefined})
     .then(function(r){ return r.json().then(function(d){ return {status:r.status,d:d}; }); })
     .then(function(res){
       typing.remove();
       if(res.status===200 && res.d.answer){
         bub('bot', format(res.d.answer));
-        history.push({role:'user',text:q},{role:'assistant',text:res.d.answer});
+        var did=[];
+        (res.d.actions||[]).forEach(function(a){
+          if(a.type==='draft_text'){ draftCard(a); did.push('drafted a text to '+a.who+' (waiting for Angela to send)'); return; }
+          var r=FOURPL.apply(a);
+          if(r.ok){ doneCard(a,r); did.push(r.head+': '+r.text); }
+          else el('sark-act warn','<div class="sa-h">Couldn’t apply</div><div class="sa-t">'+esc(a.type.replace(/_/g,' '))+' · '+esc(a.carrier||a.agency||'')+'</div>');
+        });
+        history.push({role:'user',text:q},{role:'assistant',text:res.d.answer+(did.length?'\n[Actions taken: '+did.join('; ')+']':'')});
         extra++; try{ localStorage.setItem('sark-actions',String(extra)); }catch(e){}
         showMeter();
       } else if(res.status===429){
@@ -1331,7 +1492,6 @@
     .then(function(){ clearTimeout(timer); setBusy(false); });
   }
   function openP(){ ov.classList.add('on'); setTimeout(function(){inp.focus()},80); }
-  function closeP(){ ov.classList.remove('on'); }
   fab.addEventListener('click',openP);
   closeB.addEventListener('click',closeP);
   ov.addEventListener('click',function(e){ if(e.target===ov) closeP(); });
