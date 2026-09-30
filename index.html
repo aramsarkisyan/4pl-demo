@@ -466,7 +466,6 @@
   }
   .sark-fab .sf-spark{font-size:16px}
   .sark-fab:hover{filter:brightness(1.05)}
-  body.msg-open .sark-fab{display:none}
   .sark-overlay{position:fixed;inset:0;background:#05090fcc;z-index:90;display:none;align-items:stretch;justify-content:flex-end}
   .sark-overlay.on{display:flex}
   .sark-panel{
@@ -521,6 +520,8 @@
   .sark-act .sa-cancel{background:none;border:1px solid var(--hair2);color:var(--dim);border-radius:99px;
     padding:7px 13px;cursor:pointer;font-size:12.5px}
   @media(max-width:880px){
+    /* on phones an open chat is full-screen; keep the button off its composer */
+    body.msg-open .sark-fab{display:none}
     .sark-act textarea{font-size:16px}
     .sark-panel{width:100%}
     .sark-fab{bottom:16px;right:16px;padding:12px 17px}
@@ -1183,6 +1184,8 @@
         var i=-1; THREADS.forEach(function(t,k){ if(t.co===co) i=k; });
         switchView('msgs'); if(i<0) return;
         curThread=i; THREADS[i].unread=false; renderThreads(); renderConvo(); openThread();
+        /* the view animates in; scroll again once it has its real height */
+        setTimeout(function(){ bWrap.scrollTop=bWrap.scrollHeight; },60);
       },
       showCalls:function(){ switchView('calls'); }
     };
