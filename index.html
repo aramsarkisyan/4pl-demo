@@ -572,10 +572,9 @@
   <button class="snav" data-v="carriers"><span class="ic">02</span>Carriers</button>
   <button class="snav" data-v="renewals"><span class="ic">03</span>Renewals</button>
   <button class="snav" data-v="intake"><span class="ic">04</span>New Carrier</button>
-  <button class="snav" data-v="calls"><span class="ic">05</span>Call Assist<span class="badge live">LIVE</span></button>
-  <button class="snav" data-v="msgs"><span class="ic">06</span>Messages<span class="badge">3</span></button>
-  <button class="snav ghost"><span class="ic">07</span>Documents<span class="soon">Soon</span></button>
-  <button class="snav ghost"><span class="ic">08</span>Reports<span class="soon">Soon</span></button>
+  <button class="snav" data-v="msgs"><span class="ic">05</span>Messages<span class="badge">3</span></button>
+  <button class="snav ghost"><span class="ic">06</span>Documents<span class="soon">Soon</span></button>
+  <button class="snav ghost"><span class="ic">07</span>Reports<span class="soon">Soon</span></button>
   <div class="spacer"></div>
   <div class="userchip"><div class="av">A</div><div class="nm">Angela<small>Owner · 4PL</small></div></div>
 </aside>
@@ -594,7 +593,6 @@
   <button class="tab" data-v="carriers">Carriers</button>
   <button class="tab" data-v="renewals">Renewals</button>
   <button class="tab" data-v="intake">New Carrier</button>
-  <button class="tab" data-v="calls">Call Assist</button>
   <button class="tab" data-v="msgs">Messages</button>
 </div>
 
@@ -692,42 +690,6 @@
     </div>
   </div>
 
-  <!-- ============ CALL ASSIST ============ -->
-  <div class="view" id="v-calls">
-    <div class="msg-explain">
-      <b>You're on hold all day. Not anymore.</b> Pick the agencies you need to reach —
-      <b>Sark</b> dials them all at once, sits through the hold music and the phone-tree menus,
-      and the second a real person picks up, <b>your phone rings and Sark hands you the live agent.</b>
-      You never wait on hold again.
-    </div>
-
-    <div id="call-alert" class="call-alert" hidden></div>
-
-    <div class="panel">
-      <div class="panel-h">
-        <h2>Start a call — who do you need?</h2>
-        <span class="code">Tap and Sark dials</span>
-      </div>
-      <div class="agency-chips" id="agency-chips"></div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-h">
-        <h2>Sark is calling for you</h2>
-        <span class="code" id="calls-live-count">—</span>
-      </div>
-      <div id="call-board" class="call-board"></div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-h">
-        <h2>Earlier today — time Sark saved you</h2>
-        <span class="code">Call log</span>
-      </div>
-      <div id="call-log" style="padding:8px 20px 14px"></div>
-    </div>
-  </div>
-
   <!-- ============ MESSAGES ============ -->
   <div class="view" id="v-msgs">
     <div class="msg-explain">
@@ -757,30 +719,6 @@
 <!-- ============ DRAWER ============ -->
 <div class="overlay" id="overlay">
   <div class="drawer" id="drawer"></div>
-</div>
-
-<!-- ============ ASK SARK ============ -->
-<button id="sark-fab" class="sark-fab" aria-label="Ask Sark">
-  <span class="sf-spark">✦</span><span class="sf-label">Ask Sark</span>
-</button>
-<div class="sark-overlay" id="sark-overlay">
-  <div class="sark-panel" id="sark-panel">
-    <div class="sark-h">
-      <div class="sark-id"><span class="sf-spark">✦</span>
-        <div><div class="sark-nm">Ask Sark</div><div class="sark-sub">Your AI assistant</div></div>
-      </div>
-      <div class="sark-meter" id="sark-meter" title="AI usage this month">47 / 1,000 this month</div>
-      <button class="sark-close" id="sark-close" aria-label="Close">×</button>
-    </div>
-    <div class="sark-body" id="sark-body">
-      <div class="sark-bub bot">Hi Angela — ask me anything about your carriers, or just tell me what to do: add a note, update a date, mark something done, text a driver, or get an agency on the phone.</div>
-    </div>
-    <div class="sark-suggest" id="sark-suggest"></div>
-    <div class="sark-composer">
-      <input id="sark-input" placeholder="Ask Sark anything about your carriers…">
-      <button id="sark-send">Ask</button>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -1193,7 +1131,7 @@
 
   /* ---------- swipe left/right to change tabs ---------- */
   (function(){
-    var ORDER=['dash','carriers','renewals','intake','calls','msgs'];
+    var ORDER=['dash','carriers','renewals','intake','msgs'];
     var x0=0,y0=0,t0=0,tracking=false;
     /* don't hijack a swipe that belongs to something scrolling sideways */
     function inSideScroller(el){
@@ -1240,266 +1178,4 @@
   })();
 })();
 
-/* ================= CALL ASSIST (hold-bot) ================= */
-(function(){
-  var AGENCIES=[
-    {name:"FMCSA",                   sub:"DOT/MC authority · MCS-150", ph:"(800) 832-5660"},
-    {name:"CA DMV — Motor Carrier",  sub:"CA MCP permit",              ph:"(916) 657-8153"},
-    {name:"CARB — Clean Truck Check",sub:"CTC compliance",             ph:"(866) 634-3735"},
-    {name:"IRP / Apportioned Reg.",  sub:"Cab cards & registration",   ph:"(916) 657-7971"},
-    {name:"Progressive Commercial",  sub:"Insurance / COI",            ph:"(800) 444-4487"},
-    {name:"UCR Registration",        sub:"Annual UCR filing",          ph:"(833) 827-7626"}
-  ];
-  var board=document.getElementById('call-board'),
-      chipsWrap=document.getElementById('agency-chips'),
-      alertBox=document.getElementById('call-alert'),
-      liveCount=document.getElementById('calls-live-count'),
-      logWrap=document.getElementById('call-log');
-  if(!board) return;
-  var calls=[], uid=0;
-  var empty=document.createElement('div');
-  empty.className='cc-empty';
-  empty.textContent='No active calls. Tap an agency above and Sark starts dialing — go do something else, your desk phone rings when a person picks up.';
-  board.appendChild(empty);
-
-  function rnd(a,b){ return a+Math.floor(Math.random()*(b-a+1)); }
-  function mmss(s){ var m=Math.floor(s/60),r=s%60; return m+':'+(r<10?'0':'')+r; }
-  function active(){ return calls.filter(function(c){return c.state!=='done'}); }
-  /* only one agent at a time — the rest keep holding until Angela is free */
-  function busy(){ return calls.some(function(c){return c.state==='human'||c.state==='ringing'||c.state==='connected'}); }
-
-  function stateText(c){
-    switch(c.state){
-      case 'dialing':   return 'Dialing '+c.ag.ph+'…';
-      case 'menu':      return 'In the phone menu — pressed 2, then 1…';
-      case 'hold':      return 'On hold · '+c.hold+' min — Sark is waiting so you don’t have to';
-      case 'human':     return 'A real person picked up — Sark told them “connecting you to Angela now”';
-      case 'ringing':   return 'Ringing '+c.where+'… pick up and you’re on';
-      case 'connected': return 'You’re on with '+c.ag.name+' · '+mmss(c.talk)+' · Sark held '+c.hold+' min for you';
-    }
-    return '';
-  }
-  function rightSide(c){
-    if(c.state==='hold')      return '<span class="cc-timer">'+c.hold+' min</span>';
-    if(c.state==='human')     return '<div class="cc-btns"><button class="cc-join" data-a="desk">Ring my desk phone ▸</button><button class="cc-ghost" data-a="cell">Ring my cell</button></div>';
-    if(c.state==='connected') return '<div class="cc-btns"><button class="cc-hang" data-a="hang">Hang up</button></div>';
-    return '';
-  }
-  function wire(root,c){
-    root.querySelectorAll('button[data-a]').forEach(function(b){
-      b.addEventListener('click',function(){ act(c,b.dataset.a); });
-    });
-  }
-  /* each card is built once and updated in place — rebuilding every second would eat clicks */
-  function paint(c){
-    if(!c.el){
-      c.el=document.createElement('div');
-      c.el.innerHTML='<span class="cc-dot"></span><div class="cc-main"><div class="cc-co">'+c.ag.name+
-        ' <small>· '+c.ag.sub+'</small></div><div class="cc-status"></div></div><div class="cc-right"></div>';
-      board.appendChild(c.el);
-    }
-    c.el.className='call-card '+c.state;
-    c.el.querySelector('.cc-status').textContent=stateText(c);
-    var r=c.el.querySelector('.cc-right');
-    if(c._shown!==c.state){ c._shown=c.state; r.innerHTML=rightSide(c); wire(r,c); }
-    else if(c.state==='hold'){ var t=r.querySelector('.cc-timer'); if(t) t.textContent=c.hold+' min'; }
-  }
-  function refreshMeta(){
-    var n=active().length;
-    empty.hidden = n>0;
-    liveCount.textContent = n ? n+' on the line now' : 'idle';
-    var h=calls.filter(function(c){return c.state==='human'})[0];
-    if(!h){ alertBox.hidden=true; alertBox.dataset.id=''; return; }
-    if(alertBox.dataset.id===String(h.id)) return;
-    alertBox.dataset.id=String(h.id);
-    alertBox.innerHTML='<span>✦ <b>'+h.ag.name+'</b> — a real person is on the line. Sark held '+h.hold+
-      ' min and told them you’re coming.</span><span class="ca-btns"><button class="ca-join" data-a="desk">Ring my desk phone ▸</button>'+
-      '<button class="ca-cell" data-a="cell">Ring my cell</button></span>';
-    wire(alertBox,h);
-    alertBox.hidden=false;
-  }
-  function act(c,a){
-    if((a==='desk'||a==='cell') && c.state==='human'){
-      c.state='ringing'; c.where = a==='desk' ? 'your desk phone' : 'your cell'; c._t=0;
-    } else if(a==='hang' && c.state==='connected'){
-      c.state='done';
-      var note=document.createElement('div'); note.className='note';
-      note.innerHTML='<b>'+c.ag.name+'</b> — you talked to a live agent for '+mmss(c.talk)+'. Sark sat on hold '+
-        c.hold+' min so you didn’t have to.<span class="when">TODAY · just now</span>';
-      logWrap.insertBefore(note,logWrap.firstChild);
-      if(c.el && c.el.parentNode) c.el.parentNode.removeChild(c.el);
-      refreshMeta(); return;
-    } else return;
-    paint(c); refreshMeta();
-  }
-  function addCall(ag,opts){
-    opts=opts||{};
-    var c={id:++uid,ag:ag,state:opts.state||'dialing',hold:opts.hold||0,
-           _target:opts.target||rnd(5,16),_t:0,talk:0,where:''};
-    calls.push(c); paint(c); refreshMeta();
-  }
-
-  AGENCIES.forEach(function(ag){
-    var b=document.createElement('button'); b.className='agency-chip';
-    b.innerHTML='<div class="ac-n">'+ag.name+'</div><div class="ac-s">'+ag.sub+'</div>';
-    b.addEventListener('click',function(){
-      /* already calling this agency? don't dial it twice */
-      if(active().some(function(c){return c.ag===ag})) return;
-      addCall(ag,{state:'dialing'});
-    });
-    chipsWrap.appendChild(b);
-  });
-  /* lets Ask Sark start a call by agency name */
-  window.FOURPL_CALLS={start:function(name){
-    var ag=AGENCIES.filter(function(a){return a.name===name})[0];
-    if(!ag) return false;
-    if(!active().some(function(c){return c.ag===ag})) addCall(ag,{state:'dialing'});
-    return true;
-  }};
-  /* seed the call log so the "time saved" panel isn't empty */
-  logWrap.innerHTML=
-    '<div class="note"><b>IRP / Apportioned Reg.</b> — you talked to a live agent for 6:12. Sark sat on hold 22 min so you didn’t have to.<span class="when">TODAY · 8:37 AM</span></div>'+
-    '<div class="note"><b>UCR Registration</b> — you were on another call, so Sark left your callback number with the agent.<span class="when">TODAY · 8:05 AM</span></div>';
-  /* preload live calls — FMCSA reaches a person within seconds, the others keep holding */
-  addCall(AGENCIES[0],{state:'hold',hold:7,target:9});
-  addCall(AGENCIES[1],{state:'hold',hold:3,target:12});
-  addCall(AGENCIES[2],{state:'menu'});
-
-  setInterval(function(){
-    calls.forEach(function(c){
-      if(c.state==='dialing'){ if(++c._t>=2){ c.state='menu'; c._t=0; } }
-      else if(c.state==='menu'){ if(++c._t>=2){ c.state='hold'; c._t=0; } }
-      else if(c.state==='hold'){
-        c.hold++;
-        if(c.hold>=c._target){
-          if(busy()) c._target=c.hold+rnd(3,7);   /* Angela's already on one — keep holding */
-          else c.state='human';
-        }
-      }
-      else if(c.state==='ringing'){ if(++c._t>=3){ c.state='connected'; c.talk=0; } }
-      else if(c.state==='connected'){ c.talk++; }
-      else return;
-      paint(c);
-    });
-    refreshMeta();
-  },1000);
-})();
-
-/* ================= ASK SARK (AI assistant — can take actions) ================= */
-(function(){
-  var fab=document.getElementById('sark-fab'),
-      ov=document.getElementById('sark-overlay'),
-      body=document.getElementById('sark-body'),
-      sugg=document.getElementById('sark-suggest'),
-      inp=document.getElementById('sark-input'),
-      send=document.getElementById('sark-send'),
-      meter=document.getElementById('sark-meter'),
-      closeB=document.getElementById('sark-close');
-  if(!fab || !window.FOURPL) return;
-  var ENDPOINT='https://rddksfsjzagscszpidoj.supabase.co/functions/v1/fourpl-ask-sark';
-  var BASE=47, extra=0, history=[], log=[], waiting=false;
-  try{ extra=parseInt(localStorage.getItem('sark-actions')||'0',10)||0; }catch(e){}
-  function showMeter(){ meter.textContent=(BASE+extra)+' / 1,000 this month'; }
-  showMeter();
-
-  var SUGGEST=["Who's overdue right now?","Text Narek a reminder about his Clean Truck Check",
-               "Add a note to Sevan's file: bringing docs Thursday","Call FMCSA for me"];
-  SUGGEST.forEach(function(s){
-    var b=document.createElement('button'); b.className='sark-chip'; b.textContent=s;
-    b.addEventListener('click',function(){ask(s)});
-    sugg.appendChild(b);
-  });
-  function el(cls,html){
-    var e=document.createElement('div'); e.className=cls; e.innerHTML=html;
-    body.appendChild(e); body.scrollTop=body.scrollHeight; return e;
-  }
-  function bub(cls,html){ return el('sark-bub '+cls,html); }
-  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function format(t){
-    t=t.replace(/^\s*-{3,}\s*$/gm,'').replace(/\n{3,}/g,'\n\n').trim();
-    return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
-  }
-  function closeP(){ ov.classList.remove('on'); }
-  function link(card,label,fn){
-    var b=document.createElement('button'); b.className='sa-link'; b.textContent=label;
-    b.addEventListener('click',function(){ closeP(); fn(); });
-    card.appendChild(b);
-  }
-  /* a finished action: green card with a way to go look at it */
-  function doneCard(a,r){
-    var card=el('sark-act','<div class="sa-h">✓ '+esc(r.head)+'</div><div class="sa-t">'+esc(r.text)+'</div>');
-    if(r.calls) link(card,'Watch the call →',FOURPL.showCalls);
-    else if(r.co) link(card,'Open carrier file →',function(){FOURPL.showCarrier(r.co)});
-    log.push(r.head+': '+r.text);
-  }
-  /* a drafted text: nothing is sent until she taps Send */
-  function draftCard(a){
-    var card=el('sark-act draft','<div class="sa-h">Draft text · '+esc(a.who)+' · '+esc(a.phone)+'</div>'+
-      '<textarea aria-label="Text message"></textarea><div class="sa-btns"><button class="sa-send">Send text</button><button class="sa-cancel">Cancel</button></div>');
-    var ta=card.querySelector('textarea'); ta.value=a.message;
-    card.querySelector('.sa-send').addEventListener('click',function(){
-      var msg=ta.value.trim(); if(!msg) return;
-      var r=FOURPL.sendText(a.carrier,msg);
-      if(!r){ card.className='sark-act warn'; card.innerHTML='<div class="sa-h">Couldn’t send</div><div class="sa-t">That carrier isn’t on file anymore.</div>'; return; }
-      card.className='sark-act';
-      card.innerHTML='<div class="sa-h">✓ Text sent · '+esc(r.who)+' · '+esc(r.phone)+'</div><div class="sa-t">'+esc(msg)+'</div>';
-      link(card,'Open the conversation →',function(){FOURPL.showThread(a.carrier)});
-      log.push('Angela approved and sent a text to '+r.who+' ('+a.carrier+'): "'+msg+'"');
-    });
-    card.querySelector('.sa-cancel').addEventListener('click',function(){
-      card.className='sark-act muted';
-      card.innerHTML='<div class="sa-h">Draft discarded</div><div class="sa-t">Nothing was sent to '+esc(a.who)+'.</div>';
-      log.push('Angela discarded the drafted text to '+a.who+' ('+a.carrier+')');
-    });
-  }
-  /* scripted answers — only used if the live assistant can't be reached */
-  function canned(q){
-    q=q.toLowerCase();
-    if(/overdue|late|behind/.test(q))
-      return "Two items are overdue right now:<br><br>• <b>H&amp;G Transport LLC</b> — IRP Registration, <b>6 days late</b><br>"+
-        "• <b>Vardavar Logistics</b> — CARB Clean Truck Check, <b>13 days late</b>";
-    return "I couldn’t reach the assistant just now — give it a second and ask again.";
-  }
-  function setBusy(b){ waiting=b; inp.disabled=b; send.disabled=b; send.style.opacity=b?.5:1; }
-  function ask(q){
-    if(waiting) return;
-    q=q.trim(); if(!q) return;
-    bub('user', esc(q));
-    sugg.hidden=true;   /* suggestions are for getting started; give the conversation the room */
-    var typing=bub('bot typing','Sark is working…');
-    setBusy(true);
-    var ctl=('AbortController' in window)?new AbortController():null;
-    var timer=setTimeout(function(){ if(ctl) ctl.abort(); },45000);
-    fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({question:q,history:history.slice(-8),state:FOURPL.snapshot(),log:log.slice(-25)}),
-      signal:ctl?ctl.signal:undefined})
-    .then(function(r){ return r.json().then(function(d){ return {status:r.status,d:d}; }); })
-    .then(function(res){
-      typing.remove();
-      if(res.status===200 && res.d.answer){
-        bub('bot', format(res.d.answer));
-        var did=[];
-        (res.d.actions||[]).forEach(function(a){
-          if(a.type==='draft_text'){ draftCard(a); did.push('drafted a text to '+a.who+' (waiting for Angela to send)'); return; }
-          var r=FOURPL.apply(a);
-          if(r.ok){ doneCard(a,r); did.push(r.head+': '+r.text); }
-          else el('sark-act warn','<div class="sa-h">Couldn’t apply</div><div class="sa-t">'+esc(a.type.replace(/_/g,' '))+' · '+esc(a.carrier||a.agency||'')+'</div>');
-        });
-        history.push({role:'user',text:q},{role:'assistant',text:res.d.answer+(did.length?'\n[Actions taken: '+did.join('; ')+']':'')});
-        extra++; try{ localStorage.setItem('sark-actions',String(extra)); }catch(e){}
-        showMeter();
-      } else if(res.status===429){
-        bub('bot','You’ve hit this demo’s question limit for the hour — try again in a bit.');
-      } else { bub('bot', canned(q)); }
-    })
-    .catch(function(){ typing.remove(); bub('bot', canned(q)); })
-    .then(function(){ clearTimeout(timer); setBusy(false); });
-  }
-  function openP(){ ov.classList.add('on'); setTimeout(function(){inp.focus()},80); }
-  fab.addEventListener('click',openP);
-  closeB.addEventListener('click',closeP);
-  ov.addEventListener('click',function(e){ if(e.target===ov) closeP(); });
-  send.addEventListener('click',function(){ var v=inp.value; inp.value=''; ask(v); });
-  inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ var v=inp.value; inp.value=''; ask(v); } });
-})();
 </script>
